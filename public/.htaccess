@@ -1,0 +1,19 @@
+# Enable APK downloads with correct MIME type
+AddType application/vnd.android.package-archive .apk
+
+# Allow large file downloads
+<IfModule mod_php.c>
+    php_value upload_max_filesize 500M
+    php_value post_max_size 500M
+</IfModule>
+
+# Cache busting for game files
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|html)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+    <FilesMatch "\.apk$">
+        Header set Content-Disposition "attachment"
+        Header set Cache-Control "public, max-age=3600"
+    </FilesMatch>
+</IfModule>

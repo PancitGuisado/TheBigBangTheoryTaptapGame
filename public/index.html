@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Global error logger (console only — no remote reporting)
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('[GLOBAL ERROR]', msg, 'at line', lineNo);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn('[UNHANDLED PROMISE]', event.reason);
+        });
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>The Big Bang Theory: Idle Bazinga</title>
+    <meta name="description" content="An idle RPG game featuring characters from The Big Bang Theory!">
+    <!-- PWA manifest (only on http/https to avoid CORS on file://) -->
+    <script>if(window.location.protocol!=='file:'){var ml=document.createElement('link');ml.rel='manifest';ml.href='manifest.json';document.head.appendChild(ml);}</script>
+    <meta name="theme-color" content="#4a2e18">
+    <!-- Apple PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TBBT Idle">
+    <link rel="apple-touch-icon" href="images/icon-512.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Linked Stylesheet -->
+    <link rel="stylesheet" href="styles.css?bust=1781796389186">
+    <style>
+        /* Character frame dimensions — responsive sizes defined in styles.css media queries */
+        .live-character-frame { flex-shrink: 0 !important; }
+        .character-vector-wrapper {
+            width: 100% !important; height: 100% !important;
+            aspect-ratio: 2 / 3 !important; flex-shrink: 0 !important;
+        }
+        /* Hide scrollbar utility */
+        .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* ========== BOTTOM TAB BAR ========== */
+        .bottom-tab {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 0px; padding: 4px 4px 3px;
+            cursor: pointer; transition: all 0.15s ease;
+            border: none; background: transparent; position: relative;
+            min-width: 0; flex: 1 1 0;
+        }
+        .bottom-tab:hover { background: rgba(255,255,255,0.04); }
+        .bottom-tab:active { transform: scale(0.92); }
+        .bottom-tab .text-lg { font-size: 14px; line-height: 1; }
+        .bottom-tab-label {
+            font-size: 7px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.3px; color: rgba(255,255,255,0.6); transition: color 0.15s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        .bottom-tab:hover .bottom-tab-label { color: rgba(255,255,255,0.9); }
+
+        /* ========== RIGHT SIDE RAIL ========== */
+        .side-rail-btn {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; width: 30px; height: 30px; border-radius: 6px;
+            cursor: pointer; transition: all 0.15s ease;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(30,20,10,0.5); position: relative;
+        }
+        .side-rail-btn:hover {
+            background: rgba(60,40,20,0.7);
+            border-color: rgba(180,130,60,0.4); transform: scale(1.08);
+        }
+        .side-rail-btn:active { transform: scale(0.92); }
+        .side-rail-btn .text-base { font-size: 12px; line-height: 1; }
+        .side-rail-label {
+            font-size: 5px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.2px; color: rgba(255,255,255,0.45);
+            line-height: 1; margin-top: -1px;
+        }
+        .side-rail-btn:hover .side-rail-label { color: rgba(255,255,255,0.8); }
+
+        /* Notification badge */
+        .side-rail-badge {
+            position: absolute; top: -3px; right: -3px;
+            min-width: 12px; height: 12px; border-radius: 6px;
+            background: #ef4444; color: white; font-size: 7px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 2px; border: 1.5px solid #1a100a;
+            box-shadow: 0 0 6px rgba(239,68,68,0.5);
+            animation: badge-pulse 2s ease-in-out infinite;
+        }
+        @keyframes badge-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        /* Hide side rail + map button during hangout mode */
+        .hangout-active #side-rail,
+        .hangout-active #map-float-btn { display: none !important; }
+    </style>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-950 text-white h-[100dvh] w-full flex flex-col overflow-hidden select-none text-[11px]">
+<!-- NUCLEAR CACHE FIX: Runs INLINE before any external JS -->
+<script>
+(function() {
+    // 1. Pre-read save data IMMEDIATELY before any cached JS can interfere
+    try {
+        var raw = localStorage.getItem('sheldonPasadenaBattleV10') || localStorage.getItem('sheldonPasadenaBattleV9');
+        if (raw) {
+            window.__PRELOADED_SAVE = JSON.parse(raw);
+            console.log('[PRELOAD] Save captured: wave=' + window.__PRELOADED_SAVE.wave + 
+                ' money=' + (window.__PRELOADED_SAVE.resources ? window.__PRELOADED_SAVE.resources.money : '?') +
+                ' intro=' + window.__PRELOADED_SAVE.hasSeenIntro + 
+                ' tutorial=' + window.__PRELOADED_SAVE.tutorialComplete);
+        } else {
+            console.log('[PRELOAD] No save in localStorage');
+        }
+    } catch(e) { console.error('[PRELOAD] Failed to pre-read save:', e); }
+
+    // 2. Nuke ALL old service workers — they serve stale cached JS files
+    // (Guarded for file:// protocol where SW API throws SecurityError)
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            registrations.forEach(function(reg) {
+                reg.unregister().then(function() {
+                    console.log('[FIX] Unregistered stale service worker:', reg.scope);
+                }).catch(function() {});
+            });
+        }).catch(function(e) {
+            console.warn('[FIX] Could not access service workers:', e.message);
+        });
+    }
+
+    // 3. Purge ALL browser caches
+    if ('caches' in window && window.location.protocol !== 'file:') {
+        caches.keys().then(function(names) {
+            names.forEach(function(name) {
+                caches.delete(name);
+                console.log('[FIX] Deleted cache:', name);
+            });
+        }).catch(function(e) {
+            console.warn('[FIX] Could not access caches:', e.message);
+        });
+    }
+})();
+</script>
+    <!-- TITLE SCREEN OVERLAY -->
+    <div id="title-screen" class="fixed inset-0 z-[500] flex flex-col items-center justify-center transition-opacity duration-1000 ease-in-out cursor-pointer" onclick="showAuthScreen()" style="background:#000;">
+        <!-- Apartment Background -->
+        <div style="position:absolute;inset:0;background:url('images/apartment_bg.png') center/cover no-repeat;opacity:0.4;filter:blur(2px);"></div>
+        <!-- Dark gradient overlay -->
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.85) 100%);"></div>
+        <!-- Warm ambient glow -->
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.08) 0%, transparent 70%);"></div>
+
+        <!-- Logo Phase -->
+        <div id="logo-phase" class="flex flex-col items-center gap-2 sm:p-4" style="position:relative;z-index:2;">
+            <img src="images/startup_logo.png" alt="TBBT Idle Game" class="max-w-[80vw] max-h-[60vh] object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.5)] animate-pulse">
+            <p class="text-gray-400 text-xs tracking-widest uppercase animate-bounce mt-8" style="text-shadow:0 0 10px rgba(0,0,0,0.8);">Tap anywhere to continue</p>
+        </div>
+        
+        <!-- Auth Phase (hidden initially) -->
+        <div id="auth-phase" class="hidden flex items-center justify-center gap-2 sm:p-4 w-full px-4" style="max-width:700px;position:relative;z-index:2;">
+            
+            <!-- Left: Auth Form Card (matches game modals) -->
+            <div id="auth-form-container" class="bg-slate-900/40 backdrop-blur-md border border-amber-500/30 rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex-1 min-w-[260px] max-w-[340px]" style="padding:14px 16px;">
+                
+                <!-- Header (matches modal headers) -->
+                <div class="border-b-2 border-gray-800 pb-2 mb-3 text-center">
+                    <img src="images/startup_logo.png" alt="TBBT" style="height:26px;display:inline-block;filter:drop-shadow(0 0 6px rgba(255,215,0,0.3));">
+                    <p class="text-[7px] text-gray-500 mt-1 uppercase tracking-wider">Apartment 4A • Pasadena</p>
+                </div>
+
+                <!-- Tab Buttons -->
+                <div class="flex gap-2 mb-3">
+                    <button onclick="event.stopPropagation();switchAuthTab('login')" id="auth-tab-login" class="flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all bg-amber-600 text-white border border-amber-500 shadow-lg">🔑 Login</button>
+                    <button onclick="event.stopPropagation();switchAuthTab('signup')" id="auth-tab-signup" class="flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all bg-slate-800/80 text-gray-500 border border-slate-700">✨ Sign Up</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="auth-login-form">
+                    <input type="email" id="login-email" placeholder="Email" onclick="event.stopPropagation()" class="w-full bg-black/40 border border-slate-700 text-white px-3 py-2 rounded-lg text-[10px] mb-2 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                    <input type="password" id="login-password" placeholder="Password" onclick="event.stopPropagation()" class="w-full bg-black/40 border border-slate-700 text-white px-3 py-2 rounded-lg text-[10px] mb-2 focus:border-amber-500 focus:outline-none placeholder-gray-600">
+                    <button onclick="event.stopPropagation();handleLogin()" id="login-btn" class="w-full bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-white font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider cursor-pointer border border-amber-400 shadow-lg transition-all">🔑 LOGIN</button>
+                </div>
+                
+                <!-- Signup Form -->
+                <div id="auth-signup-form" class="hidden">
+                    <input type="text" id="signup-username" placeholder="Username" onclick="event.stopPropagation()" class="w-full bg-black/40 border border-slate-700 text-white px-3 py-2 rounded-lg text-[10px] mb-2 focus:border-green-500 focus:outline-none placeholder-gray-600">
+                    <input type="email" id="signup-email" placeholder="Email" onclick="event.stopPropagation()" class="w-full bg-black/40 border border-slate-700 text-white px-3 py-2 rounded-lg text-[10px] mb-2 focus:border-green-500 focus:outline-none placeholder-gray-600">
+                    <input type="password" id="signup-password" placeholder="Password (6+ chars)" onclick="event.stopPropagation()" class="w-full bg-black/40 border border-slate-700 text-white px-3 py-2 rounded-lg text-[10px] mb-2 focus:border-green-500 focus:outline-none placeholder-gray-600">
+                    <button onclick="event.stopPropagation();handleSignup()" id="signup-btn" class="w-full bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold py-2 rounded-lg text-[10px] uppercase tracking-wider cursor-pointer border border-green-400 shadow-lg transition-all">✨ CREATE ACCOUNT</button>
+                </div>
+                
+                <div id="auth-error" class="text-red-400 text-[8px] mt-2 text-center hidden"></div>
+                <div id="auth-success" class="text-green-400 text-[8px] mt-2 text-center hidden"></div>
+            </div>
+            
+            <!-- Divider -->
+            <div class="flex flex-col items-center gap-2 self-stretch opacity-40">
+                <div class="flex-1 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+                <span class="text-[8px] text-gray-600 font-bold uppercase tracking-widest">or</span>
+                <div class="flex-1 w-px bg-gradient-to-b from-transparent via-gray-600 to-transparent"></div>
+            </div>
+            
+            <!-- Right: Guest Button -->
+            <button onclick="event.stopPropagation();startAsGuest()" class="bg-slate-900/40 backdrop-blur-md hover:bg-slate-800/60 border border-slate-700 hover:border-amber-500/40 rounded-xl cursor-pointer transition-all shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center gap-2" style="padding:18px 22px;min-width:120px;">
+                <div class="w-10 h-10 rounded-full bg-black/40 border border-slate-700 flex items-center justify-center">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+                </div>
+                <span class="text-gray-300 font-bold text-[10px] uppercase tracking-wider">Guest</span>
+                <span class="text-[7px] text-gray-600 text-center leading-tight">Local save<br>only</span>
+            </button>
+        </div>
+
+        <!-- Bottom credits -->
+        <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;z-index:2;">
+            <span class="text-[6px] text-gray-700 uppercase tracking-widest">Idle Bazinga • Fan Game</span>
+        </div>
+    </div>
+
+    <!-- ========== MAIN GAME ARENA ========== -->
+    <div id="arena" onclick="handleArenaTap(event)" class="flex-1 relative bg-gradient-to-b from-gray-900 to-gray-950" style="min-height:0;overflow:hidden;clip:rect(0,auto,auto,0);padding-bottom:48px;">
+        <!-- Cinematic Effects Layer -->
+        <div id="arena-effects-layer" class="absolute inset-0 z-[5] pointer-events-none" style="overflow:hidden;"></div>
+        <!-- Dynamic Map Background -->
+        <div id="arena-background" class="absolute inset-0 z-0 pointer-events-none"></div>
+
+        <!-- TOP BAR: Compact HUD -->
+        <div class="absolute top-0 left-0 right-0 z-50 flex items-center gap-1 px-2 py-1 bg-black/80 backdrop-blur-md border-b border-white/5 pointer-events-auto" style="min-height:24px;">
+            <div class="flex items-center gap-1 text-[8px] flex-1 min-w-0">
+                <span class="text-green-400 font-bold whitespace-nowrap" id="res-money">$0</span>
+                <span class="text-gray-700">·</span>
+                <span class="text-gray-400 whitespace-nowrap">EP:<span id="ui-wave-val" class="text-white font-bold">1</span></span>
+                <span class="text-gray-700">·</span>
+                <span class="text-gray-400 whitespace-nowrap">IQ:<span id="score-val" class="text-yellow-400 font-bold">0</span></span>
+                <!-- Collapsible resource pill -->
+                <span id="res-pill" onclick="toggleResourcePill(event)" class="whitespace-nowrap cursor-pointer rounded-full px-1.5 py-px transition-all hover:bg-white/10" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:7px;color:#9ca3af;" title="Tap to show resources">📦 <span id="res-pill-count">0</span> ▾</span>
+            </div>
+            <div class="flex items-center gap-0 flex-shrink-0">
+                <!-- Combat controls get injected here by JS -->
+                <button onclick="openLeaderboard(event)" class="text-yellow-400 font-bold px-1 py-0.5 cursor-pointer text-[9px] hover:text-yellow-300 transition-colors" title="Leaderboard">🏆</button>
+                <button onclick="openSettingsModal(event)" class="text-white font-bold px-1 py-0.5 cursor-pointer text-[9px] hover:text-pink-400 transition-colors">⚙️</button>
+            </div>
+        </div>
+        <!-- Resource Dropdown (hidden by default) -->
+        <div id="res-dropdown" class="absolute z-[52] pointer-events-auto hidden" style="top:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:6px 10px;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div class="flex items-center gap-2 text-[9px]">
+                <span class="whitespace-nowrap">🧪<span id="res-stone" class="text-white font-bold">0</span></span>
+                <span class="whitespace-nowrap">⚙️<span id="res-iron" class="text-white font-bold">0</span></span>
+                <span class="whitespace-nowrap">🏅<span id="res-gold" class="text-white font-bold">0</span></span>
+                <span class="whitespace-nowrap">💎<span id="res-diamond" class="text-white font-bold">0</span></span>
+                <span class="whitespace-nowrap">🔩<span id="res-scrap" class="text-white font-bold">0</span></span>
+            </div>
+        </div>
+
+        <!-- Boss Timer Bar (below header, center, only during boss fight) -->
+        <div id="boss-controls" class="hidden absolute left-1/2 -translate-x-1/2 z-[55] pointer-events-none" style="top: 28px; width: min(85%, 340px);">
+            <div class="bg-black/95 border-2 border-red-600 px-3 py-1.5 rounded-lg shadow-[0_0_25px_rgba(239,68,68,0.5)]">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-red-400 font-black text-[9px] uppercase tracking-widest animate-pulse">⚔️ BOSS</span>
+                    <span id="boss-timer-display" class="text-white font-black text-lg tabular-nums tracking-wider"></span>
+                    <span class="text-red-400 font-black text-[9px] uppercase tracking-widest animate-pulse">FIGHT ⚔️</span>
+                </div>
+                <div class="w-full h-3 bg-gray-900 rounded-full overflow-hidden border border-gray-700 shadow-inner">
+                    <div id="boss-timer-bar" class="h-full rounded-full transition-all duration-100 ease-linear bg-gradient-to-r from-green-500 to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- KILL STREAK DISPLAY (compact, auto-fades) -->
+        <div id="kill-streak-display" class="absolute z-40 pointer-events-none text-center transition-all duration-300" style="opacity:0;transform:scale(0.5);top:28px;left:50%;translate:-50% 0;"></div>
+
+        <!-- SYNERGY DISPLAY (auto-fades via JS) -->
+        <div id="synergy-display" class="absolute top-8 left-2 z-40 pointer-events-none text-[8px] flex flex-wrap gap-0.5" style="max-width:180px;opacity:0;transition:opacity 0.8s ease;"></div>
+
+        <!-- RAGE BUFF BADGE (compact) -->
+        <span id="rage-buff-badge" class="absolute z-40 bg-red-900/80 border border-red-600/60 text-red-300 font-bold text-[7px] px-1.5 py-0.5 rounded-full shadow hidden pointer-events-none" style="top:28px;right:48px;"></span>
+
+        <!-- QUICK REPAIR CONTAINER (only shown when bots critically overheated) -->
+        <div id="quick-repair-container" class="absolute top-20 left-2 z-40 flex flex-col overflow-y-auto max-h-[40vh] gap-1 hidden"></div>
+
+        <!-- ENEMY SECTION (right side) - bottom-anchored so graphic doesn't jump -->
+        <div id="enemy-container" class="absolute right-[3%] bottom-[18%] z-30 flex flex-col overflow-y-auto max-h-[90vh] items-center gap-0" style="overflow:visible;">
+            <!-- Boss Fight Button (positioned above enemy, won't shift layout) -->
+            <button id="fight-boss-btn" onclick="startManualBossFight(event)" class="bg-gradient-to-r from-red-700 to-orange-600 hover:from-red-600 hover:to-orange-500 text-white font-black px-4 py-2 rounded-lg border-2 border-red-900 shadow-[0_0_20px_rgba(239,68,68,0.6)] text-[10px] uppercase tracking-wider cursor-pointer animate-pulse pointer-events-auto mb-1" style="text-shadow:0 0 8px rgba(255,0,0,0.8);">👑 SEASON FINALE</button>
+
+            <!-- Enemy Graphic Frame (enlarged for detail) -->
+            <div id="enemy-graphic-frame" class="flex items-end justify-center relative" style="width:18vh;height:22vh;max-width:180px;max-height:240px;overflow:visible;">
+                <!-- Boss aura injected by JS -->
+            </div>
+
+            <!-- Enemy Name & Info (BELOW graphic) -->
+            <div class="flex flex-col overflow-y-auto max-h-[90vh] items-center gap-0.5 pointer-events-none mt-1" style="max-width:200px;">
+                <span id="enemy-name" class="text-white font-black text-[11px] tracking-wider uppercase text-center" style="text-shadow: 0 0 10px rgba(255,50,50,0.6), 0 2px 4px rgba(0,0,0,0.8); line-height:1.3;"></span>
+                <div class="flex gap-1 flex-wrap justify-center">
+                    <span id="enemy-type-badge" class="bg-red-900/80 text-red-300 text-[7px] px-1.5 py-0.5 rounded font-bold border border-red-700"></span>
+                    <span id="enemy-level-badge" class="bg-amber-900/80 text-amber-300 text-[7px] px-1.5 py-0.5 rounded font-bold border border-amber-700"></span>
+                    <span id="enemy-dmg-info" class="bg-slate-800/80 text-slate-300 text-[7px] px-1.5 py-0.5 rounded font-bold border border-slate-600"></span>
+                </div>
+            </div>
+
+            <!-- Enemy HP Bar (wider, enhanced) -->
+            <div class="w-40 relative mt-1.5">
+                <div id="enemy-hp-bar-outer" class="h-3 bg-red-950/80 border border-red-900/60 rounded-sm overflow-hidden" style="box-shadow: 0 0 12px rgba(255,0,0,0.2), inset 0 1px 3px rgba(0,0,0,0.5);">
+                    <div id="enemy-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400 transition-all duration-300 relative" style="width:100%">
+                        <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent" style="height:40%;"></div>
+                    </div>
+                </div>
+                <div id="enemy-hp-text" class="text-[8px] text-gray-400 text-center mt-0.5 font-bold tabular-nums" style="text-shadow:0 0 4px rgba(0,0,0,0.8);"></div>
+            </div>
+
+            <!-- Minion Kill Progress (shows progress toward boss) -->
+            <div id="minion-progress-bar" class="w-40 mt-1">
+                <div class="flex justify-between items-center mb-0.5">
+                    <span class="text-[6px] text-gray-500 uppercase tracking-wider font-bold">Boss Progress</span>
+                    <span id="minion-progress-text" class="text-[7px] text-gray-400 font-bold tabular-nums">0/10</span>
+                </div>
+                <div class="h-1.5 bg-gray-900 rounded-full overflow-hidden border border-gray-700/50">
+                    <div id="minion-progress-fill" class="h-full bg-gradient-to-r from-purple-600 to-fuchsia-500 transition-all duration-500 rounded-full" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Enemy Battle Slot -->
+            <div id="enemy-battle-slot"></div>
+        </div>
+
+        <!-- PLAYER BATTLE LINE (characters on left) -->
+        <div id="player-battle-line" class="absolute left-[3%] bottom-[20%] z-20 flex items-end gap-1 pointer-events-none">
+            <div id="line-back" class="flex items-end gap-1"></div>
+            <div id="line-mid" class="flex items-end gap-1"></div>
+            <div id="line-front" class="flex items-end gap-1"></div>
+        </div>
+
+        <!-- ROBOT LINE: BIG BOTS -->
+        <div id="robot-line-big" class="absolute left-[25%] bottom-[26%] z-15 flex items-end gap-3 pointer-events-none"></div>
+
+        <!-- ROBOT LINE: SMALL BOTS -->
+        <div id="robot-line-small" class="absolute left-[22%] bottom-[16%] z-25 flex items-end gap-2 pointer-events-none"></div>
+
+        <!-- HANGOUT MODE ELEMENTS -->
+        <div id="hangout-crew-container" class="absolute inset-0 z-20 pointer-events-none hidden"></div>
+        <div id="hangout-hotspots" class="absolute inset-0 z-25 pointer-events-none hidden"></div>
+        <div id="dynamic-hotspots" class="absolute inset-0 z-25 pointer-events-none hidden"></div>
+
+        <!-- ========== RIGHT SIDE RAIL ========== -->
+        <div id="side-rail" class="absolute right-0 top-1/2 -translate-y-1/2 z-[65] flex flex-col items-center gap-1 py-1.5 px-0.5 pointer-events-auto transition-opacity duration-300" style="background:linear-gradient(90deg,transparent,rgba(0,0,0,0.6) 40%);border-left:1px solid rgba(255,255,255,0.05);border-radius:8px 0 0 8px;opacity:0.4;" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.4'" ontouchstart="this.style.opacity='1'">
+            <button onclick="openLocationMap()" class="side-rail-btn group relative" title="Pasadena Map"><span class="text-sm">🗺️</span></button>
+            <button onclick="openPerksModal(event)" class="side-rail-btn group relative" title="Skill Tree"><span class="text-sm">🧠</span></button>
+            <button onclick="openInventoryModal()" class="side-rail-btn group relative" title="Equipment"><span class="text-sm">🎒</span></button>
+            <button onclick="openQuestsModal()" class="side-rail-btn group relative" title="Quests"><span class="text-sm">📋</span><span id="quest-badge" class="side-rail-badge hidden">0</span></button>
+            <button onclick="if(typeof openDailyLogin==='function')openDailyLogin();else if(typeof openDailyRewardsModal==='function')openDailyRewardsModal();" class="side-rail-btn group relative" title="Daily Rewards"><span class="text-sm">🎁</span><span id="daily-badge" class="side-rail-badge hidden">!</span></button>
+            <button onclick="toggleMoreMenu()" class="side-rail-btn group relative" title="More Features" id="more-menu-toggle"><span class="text-sm" id="more-menu-icon">⋯</span></button>
+        </div>
+
+        <!-- ========== EXPANDED FEATURES PANEL (More Menu) ========== -->
+        <div id="more-menu-panel" class="hidden fixed inset-0 z-[100] pointer-events-auto" onclick="if(event.target===this)toggleMoreMenu()">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 z-10" style="width:min(280px,75vw);max-height:85vh;">
+                <div style="background:linear-gradient(135deg,rgba(30,20,12,0.97),rgba(15,10,5,0.98));border:1px solid rgba(180,130,60,0.35);border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.7);max-height:85vh;overflow-y:auto;">
+                    <div style="padding:12px 14px 8px;border-bottom:1px solid rgba(180,130,60,0.2);position:sticky;top:0;z-index:1;background:rgba(30,20,12,0.98);" class="flex items-center justify-between">
+                        <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.85);text-transform:uppercase;letter-spacing:1.5px;">📂 Features</span>
+                        <button onclick="toggleMoreMenu()" style="color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;background:none;border:none;">&times;</button>
+                    </div>
+                    <div style="padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+                        <button onclick="openRobotsModal(event);toggleMoreMenu()" class="more-grid-btn"><span>🔧</span><span class="more-grid-label">Bots</span></button>
+                        <button onclick="toggleHospitalPlace(event);toggleMoreMenu()" class="more-grid-btn"><span>🏥</span><span class="more-grid-label">Clinic</span></button>
+                        <button onclick="openFoodShop(event);toggleMoreMenu()" class="more-grid-btn"><span>🍰</span><span class="more-grid-label">Food</span></button>
+                        <button onclick="openAchievementsModal();toggleMoreMenu()" class="more-grid-btn"><span>🏆</span><span class="more-grid-label">Feats</span><span id="achievement-badge" class="side-rail-badge hidden">0</span></button>
+                        <button onclick="openEventsModal();toggleMoreMenu()" class="more-grid-btn"><span>📅</span><span class="more-grid-label">Event</span></button>
+                        <button onclick="openMinigamesHub();toggleMoreMenu()" class="more-grid-btn"><span>🎮</span><span class="more-grid-label">Play</span></button>
+                        <button onclick="openBestiary();toggleMoreMenu()" class="more-grid-btn"><span>📕</span><span class="more-grid-label">Codex</span></button>
+                        <button onclick="openComicStore();toggleMoreMenu()" class="more-grid-btn"><span>🎰</span><span class="more-grid-label">Gacha</span></button>
+                        <button onclick="openDailyMissions();toggleMoreMenu()" class="more-grid-btn"><span>🎯</span><span class="more-grid-label">Tasks</span><span id="daily-mission-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[8px] text-white font-bold flex items-center justify-center"></span></button>
+                        <button onclick="openStatsModal();toggleMoreMenu()" class="more-grid-btn"><span>📊</span><span class="more-grid-label">Stats</span></button>
+                        <button onclick="openBattleLog();toggleMoreMenu()" class="more-grid-btn"><span>📜</span><span class="more-grid-label">Log</span></button>
+                        <button onclick="openFriendList();toggleMoreMenu()" class="more-grid-btn"><span>👥</span><span class="more-grid-label">Friends</span></button>
+                        <button onclick="openCampaignModal();toggleMoreMenu()" class="more-grid-btn"><span>📖</span><span class="more-grid-label">Story</span><span id="campaign-badge" class="side-rail-badge hidden">!</span></button>
+                        <button onclick="openLeaderboard(event);toggleMoreMenu()" class="more-grid-btn"><span>🥇</span><span class="more-grid-label">Rank</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAP BUTTON moved to side rail -->
+
+        <!-- ========== BOTTOM BAR: Core Navigation (5 tabs) ========== -->
+        <div id="bottom-nav" class="hidden absolute bottom-0 left-0 right-0 z-[60] flex items-stretch justify-around pointer-events-auto" style="background:linear-gradient(180deg,rgba(15,15,20,0.95),rgba(8,8,12,0.98));border-top:1px solid rgba(255,255,255,0.06);box-shadow:0 -2px 16px rgba(0,0,0,0.5);backdrop-filter:blur(8px);">
+            <span id="ui-location-val" class="hidden"></span>
+            <span id="location-name-display" class="hidden"></span>
+            <button onclick="openLineupEditor()" class="bottom-tab group" data-tab="board">
+                <span class="text-base group-hover:scale-110 transition-transform">⚔️</span>
+                <span class="bottom-tab-label text-amber-400">Board</span>
+            </button>
+            <button onclick="openShopModal(event)" class="bottom-tab group" data-tab="gang">
+                <span class="text-base group-hover:scale-110 transition-transform">🛋️</span>
+                <span class="bottom-tab-label">Gang</span>
+            </button>
+            <button onclick="openGuildHub()" class="bottom-tab group" data-tab="guild">
+                <span class="text-base group-hover:scale-110 transition-transform">🏰</span>
+                <span class="bottom-tab-label">Guild</span>
+            </button>
+            <button onclick="openPvpHub()" class="bottom-tab group" data-tab="pvp">
+                <span class="text-base group-hover:scale-110 transition-transform">🏟️</span>
+                <span class="bottom-tab-label">Arena</span>
+            </button>
+            <button onclick="toggleHangoutMode(event)" class="bottom-tab group" data-tab="apt">
+                <span class="text-base group-hover:scale-110 transition-transform">🚪</span>
+                <span class="bottom-tab-label" id="hangout-btn-text">Apt 4A</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="hospital-place" class="hidden flex-1 relative overflow-hidden" style="min-height:0;padding-bottom:48px;">
+        <!-- Clinic Background — dark theme matching game aesthetic -->
+        <div class="absolute inset-0 z-0" style="background:linear-gradient(180deg, #0a0e1a 0%, #0d1320 40%, #111827 100%);"></div>
+        <!-- Dark tiled floor with subtle neon teal glow -->
+        <div class="absolute bottom-0 inset-x-0 h-[38%] z-0" style="background:linear-gradient(180deg, #0f1a2e 0%, #0a1220 100%);">
+            <div class="absolute inset-0 opacity-20" style="background-image:repeating-linear-gradient(90deg, rgba(20,184,166,0.12) 0px, transparent 1px, transparent 48px), repeating-linear-gradient(0deg, rgba(20,184,166,0.12) 0px, transparent 1px, transparent 48px);"></div>
+            <!-- Floor glow line -->
+            <div class="absolute top-0 inset-x-0 h-[2px]" style="background:linear-gradient(90deg, transparent 5%, rgba(20,184,166,0.25) 30%, rgba(20,184,166,0.4) 50%, rgba(20,184,166,0.25) 70%, transparent 95%);box-shadow:0 0 12px rgba(20,184,166,0.15);"></div>
+        </div>
+        <!-- Dark wall with subtle texture -->
+        <div class="absolute top-0 inset-x-0 h-[62%] z-0" style="background:linear-gradient(180deg, #0d1117 0%, #111827 60%, #0f172a 100%);">
+            <div class="absolute inset-0 opacity-6" style="background-image:repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, transparent 1px, transparent 60px);"></div>
+            <!-- Baseboard — dark with teal accent -->
+            <div class="absolute bottom-0 inset-x-0 h-2" style="background:linear-gradient(180deg, #1e293b, #0f172a);border-top:1px solid rgba(20,184,166,0.15);"></div>
+        </div>
+        <!-- Neon medical cross — left wall -->
+        <div class="absolute top-8 left-8 z-1 opacity-40">
+            <div style="width:24px;height:24px;position:relative;filter:drop-shadow(0 0 6px rgba(239,68,68,0.5));">
+                <div style="position:absolute;top:8px;left:0;width:24px;height:8px;background:#ef4444;border-radius:2px;box-shadow:0 0 8px rgba(239,68,68,0.4);"></div>
+                <div style="position:absolute;top:0;left:8px;width:8px;height:24px;background:#ef4444;border-radius:2px;box-shadow:0 0 8px rgba(239,68,68,0.4);"></div>
+            </div>
+        </div>
+        <!-- Neon medical cross — right wall -->
+        <div class="absolute top-8 right-8 z-1 opacity-40">
+            <div style="width:24px;height:24px;position:relative;filter:drop-shadow(0 0 6px rgba(239,68,68,0.5));">
+                <div style="position:absolute;top:8px;left:0;width:24px;height:8px;background:#ef4444;border-radius:2px;box-shadow:0 0 8px rgba(239,68,68,0.4);"></div>
+                <div style="position:absolute;top:0;left:8px;width:8px;height:24px;background:#ef4444;border-radius:2px;box-shadow:0 0 8px rgba(239,68,68,0.4);"></div>
+            </div>
+        </div>
+        <!-- Ceiling neon strip -->
+        <div class="absolute top-0 inset-x-0 h-[2px] z-1" style="background:linear-gradient(90deg, transparent, rgba(20,184,166,0.5), transparent); box-shadow:0 0 20px rgba(20,184,166,0.2), 0 2px 30px rgba(20,184,166,0.08);"></div>
+        <!-- Ambient scan lines -->
+        <div class="absolute inset-0 z-0 pointer-events-none opacity-[0.03]" style="background-image:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 2px, rgba(255,255,255,0.05) 4px);"></div>
+
+        <!-- Header bar -->
+        <div class="absolute top-0 left-0 right-0 z-50 flex items-center gap-3 px-3 py-2 pointer-events-auto" style="background:linear-gradient(180deg, rgba(10,15,30,0.95), rgba(10,15,30,0.7));border-bottom:1px solid rgba(20,184,166,0.25);backdrop-filter:blur(8px);">
+            <button onclick="toggleHospitalPlace(event)" class="bg-slate-800/80 hover:bg-slate-700 text-teal-300 font-bold px-3 py-1.5 rounded-lg text-[10px] cursor-pointer border border-teal-700/50 shadow-lg transition-all hover:scale-105 flex items-center gap-1" style="text-shadow:0 0 6px rgba(20,184,166,0.4);">
+                ◀ BACK
+            </button>
+            <div class="flex items-center gap-2 flex-1 justify-center">
+                <span class="text-lg">ðŸ¥</span>
+                <span class="text-teal-400 font-black text-sm tracking-widest uppercase" style="text-shadow:0 0 10px rgba(20,184,166,0.5);">PASADENA CLINIC</span>
+            </div>
+            <div class="text-[8px] text-teal-600 uppercase tracking-wider">Recovery Ward</div>
+        </div>
+
+        <!-- Beds grid area -->
+        <div id="hospital-beds-grid" class="absolute inset-0 top-10 z-10 flex flex-wrap justify-center items-start gap-3 sm:p-6 p-2 sm:p-4 pt-8 overflow-y-auto" style="padding-bottom:60px;"></div>
+    </div>
+
+    <!-- ========== STORY CUTSCENE OVERLAY ========== -->
+    <div id="story-cutscene-overlay" class="fixed inset-0 z-[200] bg-black hidden flex-col items-center justify-center">
+        <div id="cutscene-bg" class="absolute inset-0 z-0 opacity-40"></div>
+        <div id="cutscene-effects" class="absolute inset-0 z-10 pointer-events-none"></div>
+        <div id="cutscene-portal" class="absolute inset-0 z-5 pointer-events-none"></div>
+        <div id="cutscene-stage" class="absolute inset-0 z-20 pointer-events-none"></div>
+        <div class="absolute bottom-[2%] left-[3%] right-[3%] z-30 bg-black/80 backdrop-blur-md border border-white/20 rounded-lg p-2 sm:p-3 max-h-[28%] overflow-y-auto">
+            <div id="cutscene-speaker" class="text-yellow-400 font-bold text-[10px] sm:text-sm mb-0.5 uppercase tracking-wider"></div>
+            <div id="cutscene-dialogue" class="text-white text-[9px] sm:text-xs leading-snug"></div>
+        </div>
+    </div>
+
+    <!-- ========== PERKS / SKILL TREE MODAL ========== -->
+    <div id="perks-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 100;">
+        <div class="bg-gradient-to-br from-slate-950 to-slate-900 backdrop-blur-md border border-purple-800/50 w-[96%] max-w-lg max-h-[85vh] p-3 sm:p-5 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh] overflow-hidden">
+            <button onclick="closePerksModal()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer z-10">&times;</button>
+            <div class="border-b-4 border-purple-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-purple-400 uppercase">🧪 SHELDON'S WHITEBOARD</h2>
+                <p class="text-[8px] text-gray-400 mt-1 uppercase tracking-wider">Theoretical frameworks • Cost: Bazinga Points (BP)</p>
+                <div id="bazinga-points-display" class="inline-flex items-center gap-1 mt-1.5 bg-purple-900/60 border border-purple-600/50 rounded-full px-3 py-0.5">
+                    <span class="text-[9px] font-bold text-purple-300">BP:</span>
+                    <span class="text-[9px] font-bold text-yellow-400">0</span>
+                </div>
+            </div>
+            <div id="skill-tree-container" class="flex-1 overflow-y-auto flex flex-col overflow-y-auto max-h-[90vh] gap-3" style="-ms-overflow-style:none;scrollbar-width:none;"></div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 100;">
+        <div class="bg-gradient-to-br from-slate-950 to-slate-900 backdrop-blur-md border border-yellow-800/50 w-[96%] max-w-lg max-h-[85vh] p-3 sm:p-5 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh] overflow-hidden">
+            <button onclick="closeLeaderboard()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer z-10">&times;</button>
+            <div class="border-b-4 border-yellow-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-yellow-500 uppercase">🏆 GLOBAL LEADERBOARD</h2>
+                <div class="flex justify-center mt-2 mb-2">
+                    <select id="season-selector" onchange="switchLeaderboardTab(window.currentLeaderboardTab || 'score')" class="bg-slate-900 border border-yellow-700 text-yellow-400 text-[10px] px-2 py-1 rounded outline-none focus:ring-1 focus:ring-yellow-500 cursor-pointer">
+                        <option value="current">Current Season</option>
+                    </select>
+                </div>
+                <div class="flex justify-center gap-1">
+                    <button onclick="switchLeaderboardTab('score', event)" id="lb-tab-score" class="lb-tab-btn active bg-yellow-900/60 text-yellow-400 border border-yellow-700 px-3 py-1 rounded-lg text-[10px] font-bold cursor-pointer">POINTS</button>
+                    <button onclick="switchLeaderboardTab('wave', event)" id="lb-tab-wave" class="lb-tab-btn bg-slate-900/60 text-slate-400 border border-slate-700 px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-slate-800 cursor-pointer">WAVE</button>
+                    <button onclick="switchLeaderboardTab('trophies', event)" id="lb-tab-trophies" class="lb-tab-btn bg-slate-900/60 text-slate-400 border border-slate-700 px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-slate-800 cursor-pointer">TROPHY</button>
+                </div>
+            </div>
+            <div id="leaderboard-list" class="flex-1 overflow-y-auto flex flex-col overflow-y-auto max-h-[90vh] gap-2" style="-ms-overflow-style:none;scrollbar-width:none;"></div>
+        </div>
+    </div>
+
+    <!-- Player Profile Modal -->
+    <div id="player-profile-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 110;">
+        <div class="bg-gradient-to-br from-slate-950 to-slate-900 backdrop-blur-md border border-cyan-800/50 w-[96%] max-w-sm p-3 sm:p-5 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh]">
+            <button onclick="document.getElementById('player-profile-modal').classList.add('hidden')" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer z-10">&times;</button>
+            <div id="player-profile-content"></div>
+        </div>
+    </div>
+
+        <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 150;" onclick="if(event.target===this)closeSettingsModal()">
+        <div class="bg-slate-900/40 backdrop-blur-md border border-transparent/50 w-[96%] max-w-md p-3 sm:p-6 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[85vh]">
+            <button onclick="closeSettingsModal()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer">&times;</button>
+            <div class="border-b-4 border-gray-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-pink-500 uppercase">SETTINGS</h2>
+                <p class="text-[8px] text-gray-500 mt-1 uppercase tracking-wider">Adjust your audio preferences</p>
+            </div>
+            
+            <div class="flex flex-col gap-2 sm:p-4">
+                <div class="flex flex-col gap-2">
+                    <label class="text-gray-400 font-bold flex justify-between">
+                        <span>Background Music</span>
+                        <span id="vol-bgm-val" class="text-pink-400">20%</span>
+                    </label>
+                    <input type="range" id="vol-bgm" min="0" max="1" step="0.05" value="0.2" class="w-full cursor-pointer accent-pink-500" oninput="updateAudioSettings()">
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <label class="text-gray-400 font-bold flex justify-between">
+                        <span>Scene Sounds (SFX)</span>
+                        <span id="vol-scene-val" class="text-pink-400">60%</span>
+                    </label>
+                    <input type="range" id="vol-scene" min="0" max="1" step="0.05" value="0.6" class="w-full cursor-pointer accent-pink-500" oninput="updateAudioSettings()">
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <label class="text-gray-400 font-bold flex justify-between">
+                        <span>Character Voices</span>
+                        <span id="vol-char-val" class="text-pink-400">60%</span>
+                    </label>
+                    <input type="range" id="vol-char" min="0" max="1" step="0.05" value="0.6" class="w-full cursor-pointer accent-pink-500" oninput="updateAudioSettings()">
+                </div>
+
+                <!-- Notifications Toggle -->
+                <div class="border-t border-gray-800 pt-3 mt-1">
+                    <label class="text-gray-400 font-bold flex justify-between items-center cursor-pointer">
+                        <span>🔔 Push Notifications</span>
+                        <div class="relative">
+                            <input type="checkbox" id="notif-toggle" checked class="sr-only peer" onchange="toggleNotifications(this.checked)">
+                            <div class="w-9 h-5 bg-gray-700 peer-checked:bg-green-500 rounded-full transition-colors"></div>
+                            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform"></div>
+                        </div>
+                    </label>
+                    <p class="text-[7px] text-gray-600 mt-1">Daily rewards, offline progress, comeback reminders</p>
+                </div>
+
+                <!-- Damage Numbers Toggle -->
+                <div class="border-t border-gray-800 pt-3 mt-1">
+                    <label class="text-gray-400 font-bold flex justify-between items-center cursor-pointer">
+                        <span>💥 Damage Numbers</span>
+                        <div class="relative">
+                            <input type="checkbox" id="dmg-numbers-toggle" checked class="sr-only peer" onchange="toggleDmgNumbers(this.checked)">
+                            <div class="w-9 h-5 bg-gray-700 peer-checked:bg-green-500 rounded-full transition-colors"></div>
+                            <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform"></div>
+                        </div>
+                    </label>
+                    <p class="text-[7px] text-gray-600 mt-1">Show floating damage numbers in battle</p>
+                    
+                    <!-- Damage Style Options -->
+                    <div id="dmg-style-options" class="mt-2 pt-2 border-t border-gray-800/50">
+                        <p class="text-[7px] text-gray-500 mb-2 uppercase tracking-wider">Customize Style</p>
+                        
+                        <div class="mb-2">
+                            <p class="text-[7px] text-gray-500 mb-1">Size</p>
+                            <div class="flex gap-1">
+                                <button onclick="setDmgStyle('size','small')" id="dmg-size-small" class="dmg-opt-btn text-[8px] px-2 py-1 rounded border cursor-pointer bg-slate-800 text-gray-400 border-slate-700">S</button>
+                                <button onclick="setDmgStyle('size','medium')" id="dmg-size-medium" class="dmg-opt-btn text-[8px] px-2 py-1 rounded border cursor-pointer bg-amber-900/60 text-amber-400 border-amber-700">M</button>
+                                <button onclick="setDmgStyle('size','large')" id="dmg-size-large" class="dmg-opt-btn text-[8px] px-2 py-1 rounded border cursor-pointer bg-slate-800 text-gray-400 border-slate-700">L</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <p class="text-[7px] text-gray-500 mb-1">Color</p>
+                            <div class="flex gap-1">
+                                <button onclick="setDmgStyle('color','default')" id="dmg-color-default" class="w-5 h-5 rounded-full border-2 cursor-pointer border-amber-500" style="background:#fef08a;" title="Default"></button>
+                                <button onclick="setDmgStyle('color','rainbow')" id="dmg-color-rainbow" class="w-5 h-5 rounded-full border-2 cursor-pointer border-slate-600" style="background:linear-gradient(135deg,#ef4444,#f97316,#eab308,#22c55e,#3b82f6,#a855f7);" title="Rainbow"></button>
+                                <button onclick="setDmgStyle('color','red')" id="dmg-color-red" class="w-5 h-5 rounded-full border-2 cursor-pointer border-slate-600" style="background:#ef4444;" title="Red"></button>
+                                <button onclick="setDmgStyle('color','cyan')" id="dmg-color-cyan" class="w-5 h-5 rounded-full border-2 cursor-pointer border-slate-600" style="background:#22d3ee;" title="Cyan"></button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-[7px] text-gray-500 mb-1">Animation</p>
+                            <div class="flex gap-1">
+                                <button onclick="setDmgStyle('style','normal')" id="dmg-style-normal" class="dmg-opt-btn text-[7px] px-2 py-1 rounded border cursor-pointer bg-amber-900/60 text-amber-400 border-amber-700">Normal</button>
+                                <button onclick="setDmgStyle('style','bouncy')" id="dmg-style-bouncy" class="dmg-opt-btn text-[7px] px-2 py-1 rounded border cursor-pointer bg-slate-800 text-gray-400 border-slate-700">Bouncy</button>
+                                <button onclick="setDmgStyle('style','float')" id="dmg-style-float" class="dmg-opt-btn text-[7px] px-2 py-1 rounded border cursor-pointer bg-slate-800 text-gray-400 border-slate-700">Float</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Section -->
+                <div class="border-t border-gray-800 pt-3 mt-1">
+                    <div id="settings-account-info" class="text-center">
+                        <p class="text-gray-500 text-[8px] uppercase tracking-wider mb-2">Account Status</p>
+                        <p id="settings-account-status" class="text-[10px] font-bold text-amber-400 mb-2"></p>
+                        <button id="settings-connect-btn" onclick="showConnectPrompt();closeSettingsModal();" class="hidden w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold text-[10px] py-2 px-3 rounded-lg border border-amber-500 cursor-pointer hover:brightness-110 uppercase tracking-wider transition-all">🔗 Connect Account</button>
+                        <button id="settings-logout-btn" onclick="logoutAccount()" class="hidden w-full bg-gradient-to-r from-red-700 to-red-900 text-white font-bold text-[10px] py-2 px-3 rounded-lg border border-red-500 cursor-pointer hover:brightness-110 uppercase tracking-wider transition-all mt-2">🚪 Log Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guild Hub Modal -->
+    <div id="guild-hub-modal" class="fixed inset-0 bg-black/80 hidden z-[100] flex flex-col overflow-y-auto max-h-[90vh] items-center justify-center p-2 sm:p-4">
+        <div class="bg-slate-900 backdrop-blur-md border border-amber-500 w-[96%] max-w-2xl h-[85vh] p-2 sm:p-4 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh]">
+            <button onclick="closeGuildHub()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer z-10">&times;</button>
+            <div class="border-b-4 border-amber-800 pb-2 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-amber-500 uppercase">🏰 GUILD HALL</h2>
+            </div>
+            <!-- Main Content Area where we swap between No Guild / Dashboard views -->
+            <div id="guild-hub-content" class="flex-1 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- Master Crew Shop Modal -->
+    <div id="shop-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 100;" onclick="if(event.target===this)closeShopModal()">
+        <div class="bg-slate-900/40 backdrop-blur-md border border-transparent/50 w-[96%] max-w-2xl p-3 sm:p-6 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh] max-h-[85vh]">
+            <button onclick="closeShopModal()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer">&times;</button>
+            <div class="border-b-4 border-gray-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-amber-500 uppercase" id="gang-modal-title">👥 THE GANG</h2>
+                <p class="text-[8px] text-gray-500 mt-1 uppercase tracking-wider" id="gang-modal-subtitle">Your Pasadena crew • Tap to manage</p>
+                <!-- Gang Page Tabs -->
+                <div class="flex justify-center gap-1 mt-2" id="gang-page-tabs">
+                    <button onclick="switchGangPage(1)" id="gang-tab-1" class="px-4 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer border transition-all bg-amber-900/60 text-amber-400 border-amber-700">🛋️ PASADENA</button>
+                    <button onclick="switchGangPage(2)" id="gang-tab-2" class="px-4 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer border transition-all bg-slate-900/60 text-slate-400 border-slate-700">🌀 YOUNG SHELDON</button>
+                </div>
+            </div>
+            <!-- Characters Grid Mount Frame -->
+            <div class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3" id="roster-grid"></div>
+        </div>
+    </div>
+
+
+
+    <!-- Character Skill Inspection Action Modal Viewport Card -->
+    <div id="action-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] hidden p-2 sm:p-4" onclick="if(event.target===this)closeModal()">
+        <div class="bg-amber-900/40 backdrop-blur-md border border-amber-500/50 p-3 sm:p-5 w-[96%] max-w-sm relative text-white rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white text-[16px] font-bold cursor-pointer">✕</button>
+            <div class="flex items-center gap-2 sm:p-4 border-b-2 border-transparent pb-3 mb-3">
+                <div id="modal-char-avatar" class="w-14 h-16 bg-black rounded p-1 border border-transparent flex items-center justify-center flex-shrink-0"></div>
+                <div>
+                    <h3 id="modal-char-name" class="font-black text-[14px] text-amber-400 tracking-wide uppercase">---</h3>
+                    <div class="flex gap-2 items-center mt-1">
+                        <span id="modal-char-lane" class="text-[8px] bg-slate-950 px-2 py-0.5 rounded border border-transparent text-slate-400">---</span>
+                        <div id="modal-char-badge"></div>
+                    </div>
+                </div>
+            </div>
+            <p id="modal-char-desc" class="text-gray-400 text-[9px] leading-relaxed mb-4 tracking-tight min-h-[32px]">---</p>
+            <div class="bg-slate-950 p-2 rounded border border-transparent text-[10px] mb-4">
+                <div class="text-gray-500 font-bold mb-2 uppercase border-b border-transparent pb-1 flex justify-between">
+                    <span>Current Stats</span>
+                    <span class="text-amber-400">Next Level</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-2">
+                    <div class="flex justify-between items-center bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1.5 rounded border border-transparent">
+                        <span class="text-gray-400 font-bold tracking-tight">⚔️ DMG</span>
+                        <span id="modal-stat-dmg" class="font-mono text-white font-bold text-[9px]">0 <span class="text-gray-600 mx-0.5">→</span> <span class="text-amber-400">0</span></span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1.5 rounded border border-transparent">
+                        <span class="text-gray-400 font-bold tracking-tight">❤️ HP</span>
+                        <span id="modal-stat-hp" class="font-mono text-white font-bold text-[9px]">0 <span class="text-gray-600 mx-0.5">→</span> <span class="text-amber-400">0</span></span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1.5 rounded border border-transparent">
+                        <span class="text-gray-400 font-bold tracking-tight">⏱️ CD</span>
+                        <span id="modal-stat-cd" class="font-mono text-white font-bold text-[9px]">0s <span class="text-gray-600 mx-0.5">→</span> <span class="text-amber-400">0s</span></span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-1.5 rounded border border-transparent">
+                        <span class="text-gray-400 font-bold tracking-tight">🔮 PASSIVE</span>
+                        <span id="modal-stat-passive" class="font-mono text-white font-bold text-[9px]">N/A</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between border-t border-transparent pt-4">
+                <div class="flex flex-col overflow-y-auto max-h-[90vh]">
+                    <span class="text-gray-500 text-[8px] uppercase font-bold tracking-tight mb-0.5">Price Ledger:</span>
+                    <div id="modal-cost-container" class="font-black text-[12px]">💰 $0</div>
+                </div>
+            </div>
+            <div id="modal-footer-actions" class="mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Robots Factory Modal -->
+    <div id="robots-modal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-2 sm:p-2 sm:p-4" style="z-index: 100;" onclick="if(event.target===this)closeRobotsModal()">
+        <div class="bg-cyan-900/40 backdrop-blur-md border border-cyan-800/50 w-[96%] max-w-3xl p-3 sm:p-3 sm:p-6 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col overflow-y-auto max-h-[90vh]" style="max-height:96vh;">
+            <button onclick="closeRobotsModal()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer">&times;</button>
+            <div class="border-b-4 border-cyan-800 pb-2 sm:pb-3 mb-2 sm:mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-cyan-400 uppercase">🔧 HOWARD'S WORKSHOP</h2>
+                <p class="text-[8px] text-gray-500 mt-1 uppercase tracking-wider">Build robots with Howard's engineering genius</p>
+                <div id="bot-slot-info" class="mt-1 sm:mt-2 flex justify-center items-center gap-2 sm:p-4">
+                    <span id="bot-slot-count" class="text-xs text-amber-400 font-bold bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] px-3 py-1 rounded border border-amber-900">SLOTS: 1/1</span>
+                    <button id="buy-bot-slot-btn" onclick="buyBotSlot()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-1 px-3 rounded text-[9px] uppercase tracking-wider">💰 BUY SLOT ($500)</button>
+                </div>
+            </div>
+            <!-- Crafting Queue Display -->
+            <div class="mb-2 sm:mb-4 p-2 sm:p-2 sm:p-4 bg-slate-950 rounded border border-transparent flex-shrink-0">
+                <h3 class="text-cyan-400 font-bold text-[10px] mb-1 sm:mb-2 uppercase">CRAFTING QUEUE</h3>
+                <div id="crafting-queue-container" class="max-h-16 sm:max-h-32 overflow-y-auto"></div>
+            </div>
+            <!-- Robots Grid Mount Frame -->
+            <div class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 min-h-0" id="robots-grid"></div>
+        </div>
+    </div>
+
+    <!-- Robot Inspection Action Modal -->
+    <div id="robot-action-modal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-[200] hidden p-2 sm:p-4" onclick="if(event.target===this)closeRobotModal()">
+        <div class="bg-cyan-900/50 backdrop-blur-md border border-cyan-500/50 p-3 sm:p-5 w-[96%] max-w-sm relative text-white rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+            <button onclick="closeRobotModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white text-[16px] font-bold cursor-pointer">✕</button>
+            <div class="flex items-center gap-2 sm:p-4 border-b-2 border-transparent pb-3 mb-3">
+                <div id="robot-modal-avatar" class="w-14 h-16 bg-black rounded p-1 border border-transparent flex items-center justify-center flex-shrink-0 text-2xl">🤖</div>
+                <div>
+                    <h3 id="robot-modal-name" class="font-black text-[14px] text-cyan-400 tracking-wide uppercase">---</h3>
+                    <div class="flex gap-2 items-center mt-1">
+                        <span id="robot-modal-type" class="text-[8px] bg-slate-950 px-2 py-0.5 rounded border border-transparent text-slate-400">---</span>
+                        <div id="robot-modal-badge"></div>
+                    </div>
+                </div>
+            </div>
+            <p id="robot-modal-desc" class="text-gray-400 text-[9px] leading-relaxed mb-4 tracking-tight min-h-[32px]">---</p>
+            <div class="bg-slate-950 p-2 rounded border border-transparent text-[10px] mb-2 flex justify-between items-center">
+                <span class="text-gray-500 font-bold">BASE DAMAGE:</span>
+                <span class="text-white font-extrabold text-cyan-400"><span id="robot-modal-power">0</span> DMG</span>
+            </div>
+            <div class="bg-slate-950 p-2 rounded border border-transparent text-[10px] mb-4 flex justify-between items-center">
+                <span class="text-gray-500 font-bold">LANE / TYPE:</span>
+                <span class="text-white font-extrabold"><span id="robot-modal-lane">---</span></span>
+                    <span class="text-gray-500 text-[8px] uppercase font-bold tracking-tight mb-0.5">Resources Required:</span>
+                    <div id="robot-modal-cost-container" class="font-black text-[10px]">---</div>
+                </div>
+            </div>
+            <div class="bg-slate-950 p-2 rounded border border-transparent text-[10px] mb-4">
+                <span class="text-gray-500 font-bold">â±ï¸ Craft Time: </span>
+                <span id="robot-modal-craft-time" class="text-cyan-400 font-extrabold">0 min</span>
+            </div>
+            <div id="robot-modal-footer-actions" class="mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Food Shop Modal -->
+    <div id="food-shop-modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center p-2 sm:p-4 z-[100]">
+        <div class="bg-gray-950 border-4 border-orange-800 w-[96%] max-w-2xl p-3 sm:p-6 relative text-[12px] rounded-md shadow-2xl flex flex-col overflow-y-auto max-h-[90vh] max-h-[85vh]">
+            <button onclick="closeFoodShop()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer">&times;</button>
+            <div class="border-b-4 border-orange-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-orange-400 uppercase">ðŸ° THE CHEESECAKE FACTORY</h2>
+                <p class="text-[8px] text-gray-500 mt-1 uppercase tracking-wider">Penny's workplace â€¢ Buy meals to heal your crew</p>
+                <div id="food-modal-money" class="text-green-400 font-bold mt-2 bg-slate-900/75 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] inline-block px-3 py-1 rounded"></div>
+            </div>
+            <div class="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3" id="food-grid"></div>
+        </div>
+    </div>
+
+
+
+    <!-- Core Engine Scripts (must load before modules) -->
+    <script src="config.js?bust=1781796389186"></script>
+    <script src="state.js?bust=1781796389186"></script>
+    <script src="app_v2.js?bust=1781895400000"></script>
+
+    <!-- Linked Modular Game Script Engines -->
+    <script src="game_modal.js?bust=1781796389186"></script>
+    <script src="supabase.js?bust=1781796389186"></script>
+    <script src="vectors.js?bust=1781895400000"></script>
+    <script src="character_animations.js?bust=1781796389186"></script>
+    <script src="skin_combat_animations.js?bust=1781796389186"></script>
+    <script src="prime_skins_a.js?bust=1781880000000"></script>
+    <script src="prime_skins_b.js?bust=1781880000000"></script>
+    <script src="prime_skins_c.js?bust=1781880000000"></script>
+    <script src="enemy_vectors_bosses.js?bust=1781796389186"></script>
+    <script src="enemy_vectors_minions.js?bust=1781796389186"></script>
+    <script>
+    // Merge enemy vectors into main vectors object
+    if (typeof bossVectors !== "undefined" && typeof vectors !== "undefined") Object.assign(vectors, bossVectors);
+    if (typeof minionVectors !== "undefined" && typeof vectors !== "undefined") Object.assign(vectors, minionVectors);
+    </script>
+    <!-- Young Sheldon Timeline Assets -->
+    <script src="young_sheldon_enemies_a.js?bust=1781895600000"></script>
+    <script src="young_sheldon_enemies_b.js?bust=1781895600000"></script>
+    <script src="young_sheldon_maps.js?bust=1781895600000"></script>
+    <script src="young_sheldon_chars_a.js?bust=1781895700000"></script>
+    <script src="young_sheldon_chars_b.js?bust=1781895700000"></script>
+    <!-- Multiverse Saga SVGs -->
+    <script src="mv_chars.js?bust=1782000000000"></script>
+    <script src="mv_enemies.js?bust=1782000000000"></script>
+    <script src="mv_maps.js?bust=1782000000000"></script>
+    <!-- Genesis Protocol SVGs -->
+    <script src="gen_chars.js?bust=1782000000000"></script>
+    <script src="gen_enemies.js?bust=1782000000000"></script>
+    <script src="gen_maps.js?bust=1782000000000"></script>
+    <script>
+    // Merge Young Sheldon enemy types into main arrays
+    if (typeof ysMinionTypes !== 'undefined' && typeof minionTypes !== 'undefined') {
+        for (var i = 0; i < ysMinionTypes.length; i++) minionTypes.push(ysMinionTypes[i]);
+    }
+    if (typeof ysBossTypes !== 'undefined' && typeof bossTypes !== 'undefined') {
+        for (var i = 0; i < ysBossTypes.length; i++) bossTypes.push(ysBossTypes[i]);
+    }
+    console.log('[YS] Merged', (typeof ysMinionTypes !== 'undefined' ? ysMinionTypes.length : 0), 'minions +', (typeof ysBossTypes !== 'undefined' ? ysBossTypes.length : 0), 'bosses');
+    </script>
+    <script src="pvp.js?bust=1781796389186"></script>
+    <script src="achievements.js?bust=1781796389186"></script>
+    <script src="quests.js?bust=1781796389186"></script>
+    <script src="equipment.js?bust=1781796389186"></script>
+    <script src="events.js?bust=1781796389186"></script>
+    <script src="daily_rewards.js?bust=1781796389186"></script>
+    <script src="minigames.js?bust=1781796389186"></script>
+    <script src="notifications.js?bust=1781796389186"></script>
+    <script src="guilds.js?bust=1781796389186"></script>
+    <script src="prestige.js?bust=1781796389186"></script>
+    <script src="statistics.js?bust=1781796389186"></script>
+    <script src="bestiary.js?bust=1781796389186"></script>
+    <script src="gacha.js?bust=1781796389186"></script>
+    <script src="player_profile.js?bust=1781872500000"></script>
+    <script src="daily_missions.js?bust=1781796389186"></script>
+    <script src="guild_raids.js?bust=1781796389186"></script>
+    <script src="tutorial.js?bust=1781879500000"></script>
+    <script src="dialogue.js?bust=1781796389186"></script>
+    <script src="sweep.js?bust=1781796389186"></script>
+    <script src="set_bonuses.js?bust=1781796389186"></script>
+    <script src="hangout_chat.js?bust=1781796389186"></script>
+    <script src="auto_heal.js?bust=1781796389186"></script>
+    <script src="pvp_rewards.js?bust=1781796389186"></script>
+    <script src="battle_log.js?bust=1781796389186"></script>
+    <script src="friends.js?bust=1781796389186"></script>
+    <script src="campaign.js?bust=1781796389186"></script>
+    <script src="char_detail.js?bust=1781796389186"></script>
+    <script src="power_rating.js?bust=1781796389186"></script>
+    <script src="visual_effects.js?bust=1781796389186"></script>
+    <script src="pwa_install.js?bust=1781796389186"></script>
+    <script src="badges.js?bust=1781796389186"></script>
+    <script src="quick_actions.js?bust=1781796389186"></script>
+    <script src="story_wave80.js?bust=1781895600000"></script>
+    <!-- New Feature Modules -->
+    <script src="offline_earnings.js?bust=1781796389186"></script>
+    <script src="qol_upgrades.js?bust=1781796389186"></script>
+    <script src="tower_enemies.js?bust=1781895400000"></script>
+    <script src="tower.js?bust=1781895500000"></script>
+    <script src="battle_pass.js?bust=1781796389186"></script>
+    <script src="trading_post.js?bust=1781796389186"></script>
+    <script src="talents.js?bust=1781796389186"></script>
+    <script src="formation_presets.js?bust=1781880000000"></script>
+    <script src="chat.js?bust=1781895500000"></script>
+    <script src="map_backgrounds.js?bust=1781880100000"></script>
+    <script src="daily_login.js?bust=1781880100000"></script>
+    <script src="boss_rush.js?bust=1781880100000"></script>
+    <!-- Phase 1: Core Engagement -->
+    <script src="pets.js?bust=1781880200000"></script>
+    <script src="idle_rewards.js?bust=1781880200000"></script>
+    <script src="mini_bosses.js?bust=1781880200000"></script>
+    <!-- Phase 2: Endgame Depth -->
+    <script src="awakening.js?bust=1781880200000"></script>
+    <script src="enchantments.js?bust=1781880200000"></script>
+    <script src="formation_skills.js?bust=1781880200000"></script>
+    <!-- Phase 3: Social & Content -->
+    <script src="world_boss.js?bust=1781880200000"></script>
+    <script src="pvp_tournament.js?bust=1781880200000"></script>
+    <script src="apartment.js?bust=1781880200000"></script>
+    <script src="seasons.js?bust=1781880200000"></script>
+    
+    <!-- Phase 4: Young Sheldon Mega Update -->
+    <script src="wave_scaling.js?bust=1781900000000"></script>
+    <script src="ys_combat.js?bust=1781900000000"></script>
+    <script src="texas_gear.js?bust=1781900000000"></script>
+    <script src="minigames_ys.js?bust=1781900000000"></script>
+    <script src="achievements_ys.js?bust=1781900000000"></script>
+    <script src="daily_challenges_ys.js?bust=1781900000000"></script>
+    <script src="ys_prestige.js?bust=1781900000000"></script>
+    <script src="ys_sfx.js?bust=1781900000000"></script>
+    <script src="skin_preview.js?bust=1781900000000"></script>
+    <script src="story_wave120.js?bust=1781900000000"></script>
+    
+    <!-- Phase 5: Multiverse Saga + Genesis Protocol -->
+    <script src="mv_combat.js?bust=1782000000000"></script>
+    <script src="gen_combat.js?bust=1782000000000"></script>
+
+
+    <!-- Location Map Modal -->
+    <div id="location-map-modal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-2 sm:p-4" style="z-index: 200;">
+        <div class="bg-slate-900/95 backdrop-blur-md border-2 border-green-700 w-[96%] max-w-lg p-3 sm:p-5 relative text-[12px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.8)]" style="max-height:80vh; overflow-y:auto;">
+            <button onclick="closeLocationMap()" class="absolute top-2 right-4 text-gray-500 hover:text-white font-bold text-2xl cursor-pointer z-10">&times;</button>
+            <div class="border-b-4 border-green-800 pb-3 mb-4 text-center">
+                <h2 class="text-base font-bold tracking-widest text-green-400 uppercase">🗺️ PASADENA MAP</h2>
+                <p class="text-[8px] text-gray-500 mt-1 uppercase tracking-wider">Choose a location to travel to</p>
+            </div>
+            <div class="grid grid-cols-1 gap-2" id="location-grid"></div>
+        </div>
+    </div>
+
+<!-- Skin Selector Modal -->
+    <div id="skin-selector-modal" class="hidden"></div>
+
+<script>if(typeof ensureSkinData === "function") ensureSkinData();</script>
+
+    <!-- Lineup Editor Modal -->
+    <div id="lineup-editor-modal" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[300] hidden p-2" onclick="if(event.target===this)closeLineupEditor()">
+        <div class="bg-gradient-to-b from-slate-900 via-slate-950 to-black border-2 border-amber-500/50 rounded-xl w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col overflow-y-auto max-h-[90vh] shadow-[0_0_60px_rgba(245,158,11,0.2)]">
+            <!-- Header -->
+            <div class="p-3 border-b border-amber-900/50 flex items-center justify-between bg-gradient-to-r from-amber-950/80 via-slate-950 to-amber-950/80">
+                <div>
+                    <h2 class="text-amber-400 font-black text-sm tracking-widest uppercase">📋 THE WHITEBOARD</h2>
+                    <div class="text-[8px] text-gray-500 mt-0.5">Sheldon's strategic battle formation</div>
+                </div>
+                <button onclick="closeLineupEditor()" class="text-gray-400 hover:text-white text-lg font-bold cursor-pointer px-2">✕</button>
+            </div>
+            <!-- Formation Grid -->
+            <div class="p-3 flex-1 overflow-y-auto" id="lineup-editor-content">
+                <!-- Filled by JS -->
+            </div>
+            <!-- Footer -->
+            <div class="p-3 border-t border-amber-900/50 flex gap-2">
+                <button onclick="saveLineupFormation()" class="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-black py-2.5 text-xs cursor-pointer uppercase tracking-widest rounded-lg border border-emerald-400 shadow-lg">✅ SAVE FORMATION</button>
+                <button onclick="closeLineupEditor()" class="px-4 bg-slate-800 hover:bg-slate-700 text-gray-400 font-bold py-2.5 text-xs cursor-pointer uppercase rounded-lg border border-slate-700">CANCEL</button>
+            </div>
+        </div>
+    </div>
+<!-- Chat Toggle Button -->
+<button id="chat-toggle-btn" onclick="toggleChatPanel()" style="position:fixed;bottom:70px;left:12px;z-index:90;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);border:2px solid #b45309;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;transition:all 0.2s;"><span>💬</span><span id="chat-unread-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:50%;width:18px;height:18px;font-size:9px;font-weight:bold;align-items:center;justify-content:center;"></span></button>
+
+<!-- Service Worker DISABLED — was serving stale cached JS files causing save data loss -->
+<script>
+    // SW has been disabled to prevent stale JS caching. 
+    // The inline cache nuke at the top of <body> already unregisters any old SWs.
+    // To re-enable PWA in the future, uncomment this and ensure sw.js uses network-first for JS.
+    /*
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').then(function(reg) {
+                console.log('[PWA] Service Worker registered, scope:', reg.scope);
+            }).catch(function(err) {
+                console.warn('[PWA] Service Worker registration failed:', err);
+            });
+        });
+    }
+    */
+    console.log('[PWA] Service Worker registration is disabled to prevent cache staleness.');
+</script>
+</body>
+</html>

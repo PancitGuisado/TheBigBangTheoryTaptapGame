@@ -1,0 +1,2324 @@
+body {
+    font-family: 'Press Start 2P', monospace;
+    image-rendering: pixelated;
+    overflow-x: hidden;
+}
+
+/* Evolution skin unlock pop-in animation */
+@keyframes evoPopIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Boss enemy menacing aura pulse */
+@keyframes bossAuraPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* ==========================================================================
+   AMBIENT IDLE & GLOBAL LIFE ANIMATIONS (CLEAN QUEUE FORMATION FIX)
+   ========================================================================== */
+.lane-column > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 24px; 
+    width: 100%;
+    height: 100%;
+}
+
+#line-back > div { animation: laneIdleBack 3.4s ease-in-out infinite alternate; }
+#line-mid > div { animation: laneIdleMid 2.9s ease-in-out infinite alternate; }
+#line-front > div { animation: laneIdleFront 2.4s ease-in-out infinite alternate; }
+
+@keyframes laneIdleBack {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-8px) rotate(-0.5deg); }
+}
+@keyframes laneIdleMid {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-6px) rotate(0.5deg); }
+}
+@keyframes laneIdleFront {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-5px) rotate(-0.3deg); }
+}
+
+/* Enemy Breathing Scale */
+#enemy-graphic-frame { 
+    transform-origin: bottom center;
+}
+.enemy-breathing {
+    animation: enemyBreathe 2s ease-in-out 0.7s infinite alternate;
+}
+@keyframes enemyBreathe {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.03); }
+}
+
+/* Enemy Spawn Entrance Burst */
+.enemy-spawn-in {
+    animation: enemyEntrance 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.4) forwards;
+}
+@keyframes enemyEntrance {
+    0% { transform: scale(0) rotate(-25deg); opacity: 0; filter: brightness(3); }
+    70% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
+
+/* Global Screen Shake Engine */
+.screen-shake-active {
+    animation: structuralShake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes structuralShake {
+    10%, 90% { transform: translate3d(-2px, 2px, 0); }
+    20%, 80% { transform: translate3d(4px, -3px, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 5px, 0); }
+    40%, 60% { transform: translate3d(6px, -4px, 0); }
+}
+
+/* Master Combat FX Handling Layout */
+.unique-fx {
+    position: absolute;
+    pointer-events: none;
+    z-index: 60;
+    transform-origin: center;
+}
+
+/* Arena Ambient Overrides */
+.rage-active-bg {
+    animation: rageRedTint 0.4s ease-in-out infinite alternate;
+}
+@keyframes rageRedTint {
+    0% { background-color: #e2ceb1; filter: sepia(0.1); }
+    100% { background-color: #fee2e2; filter: sepia(0.3) saturate(1.8); }
+}
+
+/* Sheldon: Plasma Orb Upgrade (Fires to Enemy) */
+.green-powerball {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #bbf7d0 20%, #22c55e 60%, #16a34a 100%);
+    box-shadow: 0 0 16px #22c55e, 0 0 32px #14532d;
+    animation: fireBallTrack 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.powerball-core {
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 8px white;
+}
+@keyframes fireBallTrack {
+    0% { transform: scale(0.3) translate(0, 0); opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: scale(1.1) translate(var(--target-x), var(--target-y)); opacity: 0; }
+}
+
+/* Howard: Froot Loop Trails & Rocketry (Fires to Enemy) */
+.froot-loop {
+    animation: loopLaunch 0.8s ease-out forwards;
+}
+@keyframes loopLaunch {
+    0% { transform: scale(0.5) translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.3) translateY(-60px) rotate(360deg); opacity: 0; }
+}
+.howard-missile {
+    animation: rocketFly 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes rocketFly {
+    0% { transform: translate(0, 0) scaleX(0.7); opacity: 1; }
+    100% { transform: translate(var(--target-x), var(--target-y)) scaleX(1); opacity: 0; }
+}
+
+/* Raj: Cosmic Solar Disintegration Ray (Stretches across entire distance) */
+.raj-laser-line {
+    height: 8px;
+    background: linear-gradient(to right, transparent, #ea580c, #facc15, #ffffff);
+    box-shadow: 0 0 12px #ea580c, 0 0 24px #facc15;
+    animation: sunBeamSweep 0.5s ease-out forwards;
+    transform-origin: left center;
+}
+@keyframes sunBeamSweep {
+    0% { width: 4px; opacity: 1; transform: scaleY(1); }
+    50% { width: var(--target-x); opacity: 1; transform: scaleY(3); }
+    100% { width: var(--target-x); opacity: 0; transform: scaleY(0.1); }
+}
+
+/* Bernadette: Sonic Amplification Matrix (Pulses across to Enemy) */
+.bernie-soundwave {
+    width: 15px;
+    height: 30px;
+    border-right: 3px solid #10b981;
+    border-radius: 0 100% 100% 0;
+    animation: sonicPulse 0.5s ease-out forwards;
+}
+@keyframes sonicPulse {
+    0% { transform: scale(0.5) translate(0, 0); opacity: 1; width: 15px; }
+    100% { transform: scale(2.5) translate(var(--target-x), var(--target-y)); opacity: 0; width: 40px; }
+}
+.bernie-heal-pulse {
+    animation: healFloat 0.9s ease-out forwards;
+}
+@keyframes healFloat {
+    0% { transform: translateY(15px) scale(0.6); opacity: 0; }
+    20% { opacity: 1; transform: translateY(0) scale(1.1); }
+    100% { transform: translateY(-45px) scale(0.8); opacity: 0; }
+}
+
+/* Amy: Neuro-Primate Target Extraction (Drops onto Enemy) */
+.amy-monkey {
+    animation: monkeyDrop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes monkeyDrop {
+    0% { transform: translate(0, -150px) rotate(-40deg); opacity: 0; }
+    30% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    60% { transform: translate(0, 0) scaleX(-1); opacity: 1; }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(0.5); opacity: 0; }
+}
+
+/* Leonard: Paladin Blade Execution */
+.physical-sword {
+    animation: swordSlash 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes swordSlash {
+    0% { transform: rotate(-80deg) scale(0.3); opacity: 0; }
+    30% { transform: rotate(-15deg) scale(1.1); opacity: 1; }
+    60% { transform: rotate(35deg) scale(1); }
+    100% { transform: translate(30px, 40px) rotate(70deg) scale(0.6); opacity: 0; }
+}
+
+/* Impact Spark Particles */
+.impact-spark {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #fef08a;
+    box-shadow: 0 0 8px #facc15;
+    animation: sparkScatter 0.5s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+    pointer-events: none;
+    z-index: 70;
+}
+@keyframes sparkScatter {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+}
+
+/* Damage Engine Arcade Typography Popups */
+.damage-popup {
+    position: absolute;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+    z-index: 99;
+    animation: retroPopUp 0.8s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+    pointer-events: none;
+}
+.crit-popup {
+    color: #facc15 !important;
+    font-size: 2.75rem !important;
+    text-shadow: 4px 4px 0px #9a3412, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000 !important;
+    filter: drop-shadow(0 0 15px #f59e0b);
+}
+@keyframes retroPopUp {
+    0% { transform: translateY(30px) scale(0.3) rotate(-12deg); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.3) rotate(6deg); opacity: 1; }
+    40% { transform: translateY(-30px) scale(1) rotate(-4deg); }
+    100% { transform: translateY(-85px) scale(0.8) rotate(0deg); opacity: 0; }
+}
+
+/* Unit Sprite State Tweaks & Strike Dashes (Melee rushes toward enemy) */
+/* Unit Sprite State Tweaks & Strike Dashes (100% full melee contact) */
+.strike-dash { animation: activeDash 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+@keyframes activeDash {
+    0% { transform: translate(0, 0); }
+    /* Scales to 1.0 multiplier ensuring full coordinate contact with enemy box */
+    50% { transform: translate(calc(var(--target-x) * 1), calc(var(--target-y) * 1)) scale(1.15); z-index: 100; }
+    100% { transform: translate(0, 0); }
+}
+
+/* Penny: Slower, Massive Burger Throw */
+.penny-burger-throw {
+    /* FIX: Increased duration from 0.6s to 1.2s */
+    animation: throwBurger 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    z-index: 100;
+}
+
+@keyframes throwBurger {
+    /* FIX: Starts at normal scale (1) and grows to massive scale (2.5) instead of 0.5 to 1.5 */
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(2.5) rotate(720deg); opacity: 0; }
+}
+
+/* Amy: Toxic Chemical Flask Throw */
+.amy-chemical-throw {
+    position: absolute;
+    z-index: 150;
+    pointer-events: none;
+    animation: throwFlask 0.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes throwFlask {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    /* Arc upwards in the middle of the throw */
+    50% { transform: translate(calc(var(--target-x) / 2), calc(var(--target-y) - 60px)) scale(1.2) rotate(180deg); }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(1) rotate(360deg); opacity: 0; }
+}
+
+/* Amy: Radioactive Chemical Puddle */
+/* =======================================================
+   AMY: TOXIC CHEMICAL SKILL EFFECTS
+   ======================================================= */
+
+/* 1. The Flask Throwing Arc */
+.amy-chemical-throw {
+    position: absolute;
+    z-index: 150;
+    pointer-events: none;
+    /* Adds a trailing blur effect behind the flask */
+    filter: drop-shadow(-10px 10px 5px rgba(34, 197, 94, 0.6));
+    animation: throwFlask 0.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes throwFlask {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    /* Arc significantly upwards in the middle of the throw, enlarging slightly */
+    50% { transform: translate(calc(var(--target-x) / 2), calc(var(--target-y) - 80px)) scale(1.5) rotate(180deg); }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(1.2) rotate(360deg); opacity: 0; }
+}
+
+/* Glowing aura embedded directly behind the spinning flask */
+.toxic-trail {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #4ade80 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+    animation: toxicTrailPulse 0.1s infinite alternate;
+}
+
+@keyframes toxicTrailPulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(3); opacity: 1; filter: blur(4px); }
+}
+
+/* 2. The Impact Splash Explosion */
+.amy-chemical-splash {
+    position: absolute;
+    z-index: 160;
+    pointer-events: none;
+    animation: splashExplode 0.5s ease-out forwards;
+}
+
+.splash-lines {
+    transform-origin: 50px 50px;
+    animation: splashSpin 0.5s ease-out forwards;
+}
+
+@keyframes splashSpin {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.8) rotate(90deg); opacity: 0; }
+}
+
+@keyframes splashExplode {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* 3. The Radioactive Puddle DOT */
+.amy-chemical-puddle {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    animation: puddlePulse 4s linear forwards;
+}
+
+@keyframes puddlePulse {
+    0% { transform: scale(0); opacity: 0; }
+    5% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px #22c55e); }
+    10% { transform: scale(1.2); filter: drop-shadow(0 0 20px #4ade80); }
+    20% { transform: scale(1); filter: drop-shadow(0 0 5px #22c55e); }
+    80% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 8px #22c55e); }
+    90% { transform: scale(0.9); opacity: 0.4; }
+    100% { transform: scale(0.7); opacity: 0; }
+}
+
+
+/* Damage Engine Arcade Typography Popups */
+.damage-popup {
+    position: absolute;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+    z-index: 99;
+    animation: retroPopUp 0.8s cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+    pointer-events: none;
+}
+.crit-popup {
+    color: #facc15 !important;
+    font-size: 2.75rem !important;
+    text-shadow: 4px 4px 0px #9a3412, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000 !important;
+    filter: drop-shadow(0 0 15px #f59e0b);
+}
+@keyframes retroPopUp {
+    0% { transform: translateY(30px) scale(0.3) rotate(-12deg); opacity: 0; }
+    20% { transform: translateY(-20px) scale(1.3) rotate(6deg); opacity: 1; }
+    40% { transform: translateY(-30px) scale(1) rotate(-4deg); }
+    100% { transform: translateY(-85px) scale(0.8) rotate(0deg); opacity: 0; }
+}
+
+/* Unit Sprite State Tweaks & Strike Dashes (Melee rushes toward enemy) */
+/* Unit Sprite State Tweaks & Strike Dashes (100% full melee contact) */
+.strike-dash { animation: activeDash 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+@keyframes activeDash {
+    0% { transform: translate(0, 0); }
+    /* Scales to 1.0 multiplier ensuring full coordinate contact with enemy box */
+    50% { transform: translate(calc(var(--target-x) * 1), calc(var(--target-y) * 1)) scale(1.15); z-index: 100; }
+    100% { transform: translate(0, 0); }
+}
+
+/* Penny: Slower, Massive Burger Throw */
+.penny-burger-throw {
+    /* FIX: Increased duration from 0.6s to 1.2s */
+    animation: throwBurger 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    z-index: 100;
+}
+
+@keyframes throwBurger {
+    /* FIX: Starts at normal scale (1) and grows to massive scale (2.5) instead of 0.5 to 1.5 */
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(2.5) rotate(720deg); opacity: 0; }
+}
+
+/* Amy: Toxic Chemical Flask Throw */
+.amy-chemical-throw {
+    position: absolute;
+    z-index: 150;
+    pointer-events: none;
+    animation: throwFlask 0.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes throwFlask {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    /* Arc upwards in the middle of the throw */
+    50% { transform: translate(calc(var(--target-x) / 2), calc(var(--target-y) - 60px)) scale(1.2) rotate(180deg); }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(1) rotate(360deg); opacity: 0; }
+}
+
+/* Amy: Radioactive Chemical Puddle */
+/* =======================================================
+   AMY: TOXIC CHEMICAL SKILL EFFECTS
+   ======================================================= */
+
+/* 1. The Flask Throwing Arc */
+.amy-chemical-throw {
+    position: absolute;
+    z-index: 150;
+    pointer-events: none;
+    /* Adds a trailing blur effect behind the flask */
+    filter: drop-shadow(-10px 10px 5px rgba(34, 197, 94, 0.6));
+    animation: throwFlask 0.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes throwFlask {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    /* Arc significantly upwards in the middle of the throw, enlarging slightly */
+    50% { transform: translate(calc(var(--target-x) / 2), calc(var(--target-y) - 80px)) scale(1.5) rotate(180deg); }
+    100% { transform: translate(var(--target-x), var(--target-y)) scale(1.2) rotate(360deg); opacity: 0; }
+}
+
+/* Glowing aura embedded directly behind the spinning flask */
+.toxic-trail {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #4ade80 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 1;
+    animation: toxicTrailPulse 0.1s infinite alternate;
+}
+
+@keyframes toxicTrailPulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(3); opacity: 1; filter: blur(4px); }
+}
+
+/* 2. The Impact Splash Explosion */
+.amy-chemical-splash {
+    position: absolute;
+    z-index: 160;
+    pointer-events: none;
+    animation: splashExplode 0.5s ease-out forwards;
+}
+
+.splash-lines {
+    transform-origin: 50px 50px;
+    animation: splashSpin 0.5s ease-out forwards;
+}
+
+@keyframes splashSpin {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1.8) rotate(90deg); opacity: 0; }
+}
+
+@keyframes splashExplode {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* 3. The Radioactive Puddle DOT */
+.amy-chemical-puddle {
+    position: absolute;
+    z-index: 50; /* Sits underneath the enemy's feet */
+    pointer-events: none;
+    animation: puddlePulse 4s linear forwards;
+}
+
+@keyframes puddlePulse {
+    0% { transform: scale(0); opacity: 0; }
+    5% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px #22c55e); }
+    10% { transform: scale(1.2); filter: drop-shadow(0 0 20px #4ade80); }
+    20% { transform: scale(1); filter: drop-shadow(0 0 5px #22c55e); }
+    50% { transform: scale(1.2); filter: drop-shadow(0 0 20px #4ade80); }
+    80% { transform: scale(1); filter: drop-shadow(0 0 5px #22c55e); }
+    90% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.sheldon-surging { animation: auraGlow 0.25s ease-in-out infinite alternate; filter: drop-shadow(0 0 16px #facc15); }
+@keyframes auraGlow { 0% { transform: scale(1); } 100% { transform: scale(1.05) translateY(-2px); } }
+
+.enemy-hurt { animation: unitHurtFlash 0.2s ease-out 2 alternate; }
+@keyframes unitHurtFlash {
+    0% { transform: scale(1); filter: brightness(1) contrast(1); }
+    100% { transform: scale(0.93) translateX(12px); filter: brightness(2) saturate(0) sepia(1) hue-rotate(-50deg); }
+}
+
+/* Lane Columns Mechanics */
+.lane-column {
+    position: relative;
+    height: 100%;
+    width: 33.333%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* Clean Character Dimensions Blueprint */
+.live-character-frame {
+    height: 22vh !important;
+    width: 15vh !important;
+    flex-shrink: 0 !important;
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s ease;
+    will-change: transform;
+}
+
+/* Direct explicit bounds enforcement */
+.character-vector-wrapper {
+    width: 60px;
+    height: 90px;
+    animation: character-bob 2s ease-in-out infinite alternate;
+}
+.character-vector-wrapper svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+@keyframes character-bob {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-4px); }
+}
+
+@keyframes skel-breathe {
+    0% { transform: scaleY(1); }
+    100% { transform: scaleY(1.05); }
+}
+@keyframes skel-head-bob {
+    0% { transform: rotate(0deg) translateY(0); }
+    100% { transform: rotate(2deg) translateY(-2px); }
+}
+@keyframes skel-walk-leg-l {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(15deg); }
+}
+@keyframes skel-walk-leg-r {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-15deg); }
+}
+@keyframes skel-arm-swing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(10deg); }
+}
+
+.skel-root .skel-body { animation: skel-breathe 1.5s infinite alternate; }
+.skel-root .skel-head { animation: skel-head-bob 1.5s infinite alternate; }
+.skel-root .skel-leg-l { animation: skel-walk-leg-l 0.8s infinite alternate ease-in-out; }
+.skel-root .skel-leg-r { animation: skel-walk-leg-r 0.8s infinite alternate-reverse ease-in-out; }
+.skel-root .skel-arm-l { animation: skel-arm-swing 0.8s infinite alternate-reverse ease-in-out; }
+.skel-root .skel-arm-r { animation: skel-arm-swing 0.8s infinite alternate ease-in-out; }
+
+.anim-attack .skel-root {
+    animation: skel-attack-lunge 0.3s ease-out;
+}
+@keyframes skel-attack-lunge {
+    0% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(20px) scale(1.1); }
+    100% { transform: translateX(0) scale(1); }
+}
+
+/* Stuart Melee Saber Swing Animation Framework */
+.saber-swing {
+    animation: stuart-slash 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    transform-origin: bottom center;
+}
+@keyframes stuart-slash {
+    0% { transform: rotate(0deg) scale(1); }
+    30% { transform: rotate(-15deg) scale(1.05); }
+    50% { transform: rotate(20deg) scale(1.1); filter: drop-shadow(0 0 12px #22d3ee); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Generic Attack Bounce */
+.attack-bounce {
+    animation: attackBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform-origin: bottom center;
+}
+@keyframes attackBounce {
+    0% { transform: scale(1) translateY(0); }
+    40% { transform: scale(1.1) translateY(-10px); }
+    100% { transform: scale(1) translateY(0); }
+}
+
+/* Combined Movement & Swing for Swordsmen */
+.sword-strike {
+    animation: swordStrike 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: bottom center;
+    z-index: 100;
+}
+@keyframes swordStrike {
+    0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    50% { transform: translate(calc(var(--target-x) * 0.8), calc(var(--target-y) * 0.8)) rotate(20deg) scale(1.15); filter: drop-shadow(0 0 12px #22d3ee); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+/* ENEMY ATTACK ANIMATIONS */
+@keyframes enemy-lunge-anim {
+    0% { transform: scale(1) translateX(0); filter: brightness(1); }
+    100% { transform: scale(1.05) translate(0, -3px) rotate(3deg); filter: brightness(1.2); }
+}
+
+@keyframes projectile-fly {
+    0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translate(-60vw, 30px) rotate(360deg) scale(2); opacity: 0; }
+}
+.projectile {
+    position: absolute;
+    top: 40%;
+    left: 0;
+    z-index: 60;
+    pointer-events: none;
+    font-size: 3rem;
+    animation: projectile-fly 0.5s linear forwards;
+    filter: drop-shadow(0 0 5px rgba(255,0,0,0.5));
+}
+
+/* Bruised State Overlay */
+.bruised .character-vector-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    background-image: 
+        radial-gradient(circle at 30% 30%, rgba(128, 0, 128, 0.4) 0%, transparent 20%),
+        radial-gradient(circle at 70% 60%, rgba(200, 0, 0, 0.5) 0%, transparent 25%),
+        radial-gradient(circle at 40% 70%, rgba(100, 0, 150, 0.4) 0%, transparent 20%);
+    pointer-events: none;
+    z-index: 50;
+    mix-blend-mode: multiply;
+}
+.bruised .character-vector-wrapper {
+    filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.6));
+}
+
+
+.sheldon-surging { animation: auraGlow 0.25s ease-in-out infinite alternate; filter: drop-shadow(0 0 16px #facc15); }
+@keyframes auraGlow { 0% { transform: scale(1); } 100% { transform: scale(1.05) translateY(-2px); } }
+
+.enemy-hurt { animation: unitHurtFlash 0.2s ease-out 2 alternate; }
+@keyframes unitHurtFlash {
+    0% { transform: scale(1); filter: brightness(1) contrast(1); }
+    100% { transform: scale(0.93) translateX(12px); filter: brightness(2) saturate(0) sepia(1) hue-rotate(-50deg); }
+}
+
+.lane-column { position: relative; height: 100%; width: 33.333%; display: flex; align-items: flex-end; justify-content: center; }
+
+.character-vector-wrapper { width: 100% !important; height: 100% !important; aspect-ratio: 2 / 3 !important; max-height: 100% !important; flex-shrink: 0 !important; }
+
+.character-vector-wrapper svg { width: 100% !important; height: 100% !important; overflow: visible !important; }
+
+.saber-swing { animation: stuart-slash 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards; transform-origin: bottom center; }
+@keyframes stuart-slash { 0% { transform: rotate(0deg) scale(1); } 100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
+
+@keyframes enemy-throw-anim {
+    0% { transform: scale(1) rotate(0deg); }
+    20% { transform: scale(1.05) rotate(10deg); } 
+    40% { transform: scale(1) rotate(-10deg); } 
+    100% { transform: scale(1) rotate(0deg); }
+}
+.enemy-throw {
+    animation: enemy-throw-anim 0.4s ease-out;
+}
+
+@keyframes enemy-lunge-anim {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(30px) scale(1.2); }
+    100% { transform: translateY(0) scale(1); }
+}
+.enemy-lunge {
+    animation: enemy-lunge-anim 0.3s ease-out;
+}
+
+/* =======================================================
+   CUSTOM RETRO GAME SCROLLBAR
+   ======================================================= */
+/* For Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+::-webkit-scrollbar-track {
+    background: #111827; /* Tailwind gray-900 */
+    border-left: 2px solid #374151; /* Tailwind gray-700 */
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+}
+::-webkit-scrollbar-thumb {
+    background: #059669; /* Tailwind emerald-600 */
+    border: 2px solid #065f46; /* Tailwind emerald-800 */
+    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.2), inset -2px -2px 0px rgba(0,0,0,0.4);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #10b981; /* Tailwind emerald-500 */
+}
+::-webkit-scrollbar-corner {
+    background: #111827;
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: #059669 #111827;
+}
+
+/* =======================================================
+   INTRO CUTSCENE ANIMATIONS (Revamped Lore)
+   ======================================================= */
+
+/* --- OUTDOOR PASADENA BACKGROUND --- */
+.cutscene-outdoor-bg {
+    background: linear-gradient(180deg, #0c0a2a 0%, #1a1145 30%, #2d1b69 50%, #4a1942 70%, #0f172a 100%);
+    position: absolute; inset: 0;
+}
+.cutscene-outdoor-bg::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(1px 1px at 10% 20%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 30% 15%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 50% 30%, #ccc 50%, transparent 100%),
+                radial-gradient(1px 1px at 70% 10%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 85% 25%, #ddd 50%, transparent 100%),
+                radial-gradient(1px 1px at 15% 40%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 45% 8%, #eee 50%, transparent 100%),
+                radial-gradient(1px 1px at 92% 38%, #fff 50%, transparent 100%),
+                radial-gradient(1px 1px at 60% 45%, #ddd 50%, transparent 100%),
+                radial-gradient(1px 1px at 25% 5%, #fff 50%, transparent 100%);
+    animation: twinkle 3s ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+.cutscene-outdoor-bg::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+    background: linear-gradient(180deg, transparent 0%, #111827 30%, #0f172a 100%);
+}
+/* Silhouette buildings */
+.cutscene-buildings {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 30%; z-index: 1;
+    background: 
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 60%, transparent 60%) no-repeat 5% bottom / 8% 80%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 70%, transparent 70%) no-repeat 15% bottom / 6% 65%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 50%, transparent 50%) no-repeat 22% bottom / 10% 90%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 55%, transparent 55%) no-repeat 35% bottom / 7% 70%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 45%, transparent 45%) no-repeat 44% bottom / 12% 100%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 60%, transparent 60%) no-repeat 58% bottom / 6% 75%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 50%, transparent 50%) no-repeat 66% bottom / 9% 85%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 65%, transparent 65%) no-repeat 78% bottom / 7% 60%,
+        linear-gradient(0deg, #0a0a0a 0%, #0a0a0a 40%, transparent 40%) no-repeat 87% bottom / 11% 95%;
+}
+
+/* --- RED PORTAL (oval, swirling, shaking) --- */
+.cutscene-portal-idle {
+    position: absolute; left: 50%; top: 40%;
+    width: 0; height: 0; opacity: 0;
+    border-radius: 45% 45% 50% 50%;
+    transform: translate(-50%, -50%);
+    transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cutscene-portal-open {
+    width: 120px !important; height: 180px !important; opacity: 1 !important;
+    background: conic-gradient(from 0deg, #ff0000, #ff4444, #880000, #ff2222, #cc0000, #ff0000);
+    box-shadow: 0 0 60px #ff0000, 0 0 120px #ff000088, inset 0 0 40px #ff000099;
+    border-radius: 45% 45% 50% 50%;
+    animation: portalSwirl 0.8s linear infinite, portalShake 0.15s ease-in-out infinite;
+}
+@keyframes portalSwirl {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes portalShake {
+    0%, 100% { margin-left: 0; margin-top: 0; }
+    25% { margin-left: -3px; margin-top: 2px; }
+    50% { margin-left: 3px; margin-top: -2px; }
+    75% { margin-left: -2px; margin-top: -3px; }
+}
+/* Inner swirl overlay */
+.cutscene-portal-inner {
+    position: absolute; inset: 10%;
+    border-radius: 50%;
+    background: conic-gradient(from 180deg, #ff6600, #ff0000, #440000, #ff3300, #ff6600);
+    animation: portalInnerSwirl 0.5s linear infinite reverse;
+    opacity: 0.8;
+}
+@keyframes portalInnerSwirl {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* --- PORTAL EXPLOSION --- */
+.cutscene-portal-explode {
+    animation: portalExplode 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+@keyframes portalExplode {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 0 60px #ff0000; }
+    30% { transform: translate(-50%, -50%) scale(3); opacity: 1; box-shadow: 0 0 200px #ff4400; background: radial-gradient(circle, #fff, #ff4400, #ff0000); }
+    60% { transform: translate(-50%, -50%) scale(8); opacity: 0.7; background: radial-gradient(circle, #fff, #ffaa00, transparent); }
+    100% { transform: translate(-50%, -50%) scale(20); opacity: 0; }
+}
+
+/* Smoke particles */
+.cutscene-smoke {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,100,100,0.6), transparent);
+    animation: smokeRise 3s ease-out forwards;
+    pointer-events: none;
+}
+@keyframes smokeRise {
+    0% { transform: translate(0, 0) scale(0.5); opacity: 0.8; }
+    100% { transform: translate(var(--sx), var(--sy)) scale(3); opacity: 0; }
+}
+
+/* Screen flash */
+.cutscene-flash {
+    animation: screenFlash 1s ease-out forwards;
+}
+@keyframes screenFlash {
+    0% { background: #fff; }
+    100% { background: transparent; }
+}
+
+/* --- MAP SHOWCASE CARDS --- */
+.cutscene-map-card {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0);
+    width: 85%; max-width: 400px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid #ff4444; border-radius: 12px;
+    padding: 12px; text-align: center;
+    box-shadow: 0 0 40px rgba(255,0,0,0.3);
+    animation: mapCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    z-index: 50;
+}
+@keyframes mapCardIn {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+}
+.cutscene-map-card-out {
+    animation: mapCardOut 0.4s ease-in forwards !important;
+}
+@keyframes mapCardOut {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.5) translateY(-50px); opacity: 0; }
+}
+.cutscene-map-name {
+    font-family: 'Press Start 2P', monospace; font-size: 11px; color: #ff6b6b;
+    text-shadow: 0 0 10px #ff000088; margin-bottom: 8px;
+}
+.cutscene-enemy-row {
+    display: flex; justify-content: center; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+}
+.cutscene-enemy-thumb {
+    width: 40px; height: 55px; position: relative;
+    animation: enemyPopIn 0.3s ease-out forwards;
+    opacity: 0; transform: scale(0);
+}
+@keyframes enemyPopIn {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+}
+.cutscene-boss-label {
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    color: #fbbf24; margin-top: 8px; letter-spacing: 1px;
+}
+
+/* --- CHARACTER POWER-UP GLOW --- */
+.cutscene-character-enter {
+    animation: cutsceneEnter 1s ease-out forwards;
+}
+@keyframes cutsceneEnter {
+    0% { transform: translateY(50px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+.cutscene-power-up {
+    animation: powerUpGlow 1.5s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 15px #ffaa00) drop-shadow(0 0 30px #ff6600);
+}
+@keyframes powerUpGlow {
+    0% { filter: drop-shadow(0 0 10px #ffaa00) drop-shadow(0 0 20px #ff4400); transform: translateY(0); }
+    100% { filter: drop-shadow(0 0 25px #ffff00) drop-shadow(0 0 50px #ff8800); transform: translateY(-5px); }
+}
+
+/* --- ENEMY SLIDE IN --- */
+.cutscene-enemy-slide {
+    animation: cutsceneEnemySlide 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes cutsceneEnemySlide {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(0); }
+}
+
+/* --- EFFECTS --- */
+.cutscene-laser {
+    position: absolute; height: 10px;
+    background: #ef4444;
+    box-shadow: 0 0 20px #ef4444, 0 0 40px #ef4444;
+    transform-origin: left center;
+    animation: laserShoot 0.5s ease-out forwards;
+}
+@keyframes laserShoot {
+    0% { width: 0; opacity: 1; }
+    50% { width: 50vw; opacity: 1; }
+    100% { width: 50vw; opacity: 0; }
+}
+.cutscene-spark {
+    position: absolute; width: 6px; height: 6px;
+    background: #fbbf24; border-radius: 50%;
+    box-shadow: 0 0 10px #fbbf24, 0 0 20px #fff;
+    animation: sparkFly 0.8s ease-out forwards;
+}
+@keyframes sparkFly {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+/* --- SKIP BUTTON --- */
+.cutscene-skip-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 100;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.6); font-size: 9px; padding: 4px 12px;
+    border-radius: 4px; cursor: pointer; font-family: 'Press Start 2P', monospace;
+    transition: all 0.2s;
+}
+.cutscene-skip-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* Tap indicator */
+.cutscene-tap-hint {
+    position: absolute; bottom: 8px; right: 8px; z-index: 100;
+    color: rgba(255,255,255,0.4); font-size: 8px;
+    font-family: 'Press Start 2P', monospace;
+    animation: tapBlink 1.5s ease-in-out infinite;
+}
+@keyframes tapBlink { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+
+/* Screen shake for cutscene */
+.screen-shake-active {
+    animation: screenShake 0.3s ease-in-out infinite;
+}
+@keyframes screenShake {
+    0%, 100% { transform: translate(0); }
+    25% { transform: translate(-5px, 3px); }
+    50% { transform: translate(5px, -3px); }
+    75% { transform: translate(-3px, -5px); }
+}
+
+
+
+/* =======================================================
+   ANIMATED SPACE/PARTICLE BACKGROUND
+   ======================================================= */
+.starfield-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.starfield-layer {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: transparent;
+}
+
+.stars-1 {
+    background-image: radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)), radial-gradient(2px 2px at 20px 50px, rgba(255,255,255,0.8), rgba(0,0,0,0)), radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    animation: driftStars 40s linear infinite;
+    opacity: 0.3;
+}
+
+.stars-2 {
+    background-image: radial-gradient(3px 3px at 50px 160px, rgba(255,255,255,0.9), rgba(0,0,0,0)), radial-gradient(2px 2px at 120px 150px, rgba(167,139,250,0.8), rgba(0,0,0,0)), radial-gradient(3px 3px at 190px 140px, rgba(56,189,248,0.8), rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 300px 300px;
+    animation: driftStars 30s linear infinite reverse;
+    opacity: 0.5;
+}
+
+.stars-3 {
+    background-image: radial-gradient(4px 4px at 150px 260px, rgba(255,255,255,1), rgba(0,0,0,0)), radial-gradient(3px 3px at 220px 250px, rgba(52,211,153,0.8), rgba(0,0,0,0)), radial-gradient(4px 4px at 290px 240px, rgba(251,191,36,0.8), rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 400px 400px;
+    animation: driftStars 20s linear infinite;
+    opacity: 0.7;
+}
+
+@keyframes driftStars {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-100px, -100px); }
+}
+
+/* =======================================================
+   LANE-BASED CHARACTER GLOW
+   ======================================================= */
+.glow-front { filter: drop-shadow(0 10px 15px rgba(56, 189, 248, 0.6)); }
+.glow-mid { filter: drop-shadow(0 10px 15px rgba(167, 139, 250, 0.6)); }
+.glow-back { filter: drop-shadow(0 10px 15px rgba(52, 211, 153, 0.6)); }
+
+/* =======================================================
+   HANGOUT MODE LORE ANIMATIONS
+   ======================================================= */
+.hangout-bubble {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.9);
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 8px;
+    font-weight: bold;
+    white-space: nowrap;
+    animation: floatBubble 3s ease-in-out infinite alternate;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hangout-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px 4px 0;
+    border-style: solid;
+    border-color: rgba(255,255,255,0.9) transparent transparent transparent;
+}
+
+@keyframes floatBubble {
+    0% { transform: translateX(-50%) translateY(0); opacity: 0.7; }
+    100% { transform: translateX(-50%) translateY(-5px); opacity: 1; }
+}
+
+
+/* Robot Animations */
+.robot-melee-bump {
+    animation: robotBump 0.3s ease-in-out;
+}
+
+@keyframes robotBump {
+    0% { transform: translateY(0); }
+    30% { transform: translateY(-30px) scale(1.1); }
+    50% { transform: translateY(-40px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+.laser-beam {
+    position: absolute;
+    width: 4px;
+    height: 15px;
+    background: #3b82f6;
+    box-shadow: 0 0 8px #60a5fa, 0 0 12px #93c5fd;
+    border-radius: 4px;
+    z-index: 50;
+    pointer-events: none;
+    transform-origin: center;
+    animation: fireLaser 0.4s linear forwards;
+}
+
+.laser-beam.plasma {
+    background: #ec4899;
+    box-shadow: 0 0 8px #f472b6, 0 0 12px #fbcfe8;
+    width: 6px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.laser-beam.bullet {
+    background: #facc15;
+    box-shadow: 0 0 4px #fde047;
+    width: 3px;
+    height: 10px;
+}
+
+@keyframes fireLaser {
+    0% {
+        transform: translate(0, 0) rotate(var(--angle, 0deg));
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--target-x), var(--target-y)) rotate(var(--angle, 0deg));
+        opacity: 0;
+    }
+}
+
+/* ======================================================
+   HIDE SCROLLBARS IN MODALS (keep scroll functionality)
+   ======================================================= */
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+}
+.overflow-y-auto,
+.overflow-x-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Hangout idle bobbing animation */
+@keyframes hangout-idle {
+    0%, 100% { transform: scale(0.55) translateY(0); }
+    50% { transform: scale(0.55) translateY(-3px); }
+}
+    50% { transform: translateY(-3px); }
+}
+    50% { transform: scale(1.4) translateY(-4px); }
+}
+
+/* Bubble pop animation for hangout interactions */
+@keyframes bubble-pop {
+    0% { transform: scale(0.5) translateY(10px); opacity: 0; }
+    50% { transform: scale(1.05) translateY(-5px); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Kill streak combo animation */
+@keyframes streak-pulse {
+    0% { transform: scale(1.5); }
+    50% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+/* ============================================================
+   CINEMATIC BATTLE UPGRADES
+   ============================================================ */
+
+/* Ambient floating embers */
+@keyframes emberFloat {
+    0% { opacity:0; transform:translateY(0) scale(0); }
+    15% { opacity:0.8; transform:scale(1); }
+    100% { opacity:0; transform:translateY(-180px) translateX(20px) scale(0); }
+}
+
+/* Kill streak banner slide */
+@keyframes killBannerSlide {
+    0% { transform:translateX(-50%) scaleX(0); opacity:0; }
+    15% { transform:translateX(-50%) scaleX(1.05); opacity:1; }
+    85% { transform:translateX(-50%) scaleX(1); opacity:1; }
+    100% { transform:translateX(-50%) scaleX(0); opacity:0; }
+}
+
+/* Wave transition flash */
+@keyframes waveFlash {
+    0% { opacity:0; }
+    20% { opacity:1; }
+    80% { opacity:1; }
+    100% { opacity:0; transform:translateY(-30px); }
+}
+
+/* Low HP character glow */
+@keyframes lowHpPulse {
+    0%,100% { filter:drop-shadow(0 0 3px rgba(239,68,68,0.3)); }
+    50% { filter:drop-shadow(0 0 10px rgba(239,68,68,0.7)) brightness(1.1); }
+}
+.char-low-hp .character-vector-wrapper {
+    animation: lowHpPulse 1.2s ease-in-out infinite;
+}
+
+/* ============================================================
+   CHARACTER COMBAT ANIMATION SYSTEM
+   ============================================================ */
+
+/* Character Attack Pose - brief flash when attacking */
+.char-attacking .character-vector-wrapper {
+    animation: charAttackPulse 0.3s ease-out !important;
+}
+@keyframes charAttackPulse {
+    0% { transform: scale(1) translateY(0); filter: brightness(1); }
+    30% { transform: scale(1.08) translateY(-3px); filter: brightness(1.3) drop-shadow(0 0 6px rgba(255,200,0,0.6)); }
+    60% { transform: scale(1.02) translateY(-1px); filter: brightness(1.1); }
+    100% { transform: scale(1) translateY(0); filter: brightness(1); }
+}
+
+/* Character Hurt Reaction - red flash + recoil */
+.char-hurt .character-vector-wrapper {
+    animation: charHurtRecoil 0.3s ease-out !important;
+}
+@keyframes charHurtRecoil {
+    0% { transform: translateX(0) scale(1); filter: brightness(1) saturate(1); }
+    15% { transform: translateX(-6px) scale(0.95); filter: brightness(2.5) saturate(0.2); }
+    30% { transform: translateX(4px) scale(0.97); filter: brightness(1.8) saturate(2) hue-rotate(-15deg); }
+    50% { transform: translateX(-2px) scale(0.98); filter: brightness(1.3); }
+    100% { transform: translateX(0) scale(1); filter: brightness(1) saturate(1); }
+}
+
+/* ===== ENEMY LASER BEAM ATTACK SYSTEM ===== */
+
+/* --- Laser Beam Line --- */
+.enemy-laser-beam {
+    position: absolute;
+    height: 3px;
+    z-index: 100;
+    pointer-events: none;
+    transform-origin: 0 50%;
+    animation: laserFire 0.45s ease-out forwards;
+    background: linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.3) 5%, #ff4444 15%, #fff 50%, #ff4444 85%, rgba(239,68,68,0.3) 95%, transparent 100%);
+    box-shadow: 0 0 6px rgba(239,68,68,0.9), 0 0 12px rgba(239,68,68,0.5), 0 0 20px rgba(239,68,68,0.25);
+    border-radius: 2px;
+}
+.enemy-laser-beam::before {
+    content: '';
+    position: absolute;
+    inset: -3px 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(239,68,68,0.15) 10%, rgba(255,100,100,0.3) 50%, rgba(239,68,68,0.15) 90%, transparent 100%);
+    border-radius: 4px;
+    filter: blur(2px);
+}
+
+/* --- Boss Laser Beam (wider, gold-red) --- */
+.enemy-laser-beam-boss {
+    height: 5px;
+    background: linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.3) 5%, #fbbf24 15%, #fff 50%, #fbbf24 85%, rgba(251,191,36,0.3) 95%, transparent 100%);
+    box-shadow: 0 0 8px rgba(251,191,36,0.9), 0 0 16px rgba(239,68,68,0.6), 0 0 28px rgba(251,191,36,0.3);
+}
+.enemy-laser-beam-boss::before {
+    inset: -5px 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.15) 10%, rgba(255,200,50,0.35) 50%, rgba(251,191,36,0.15) 90%, transparent 100%);
+    filter: blur(3px);
+}
+
+/* --- Laser Fire Animation --- */
+@keyframes laserFire {
+    0%   { opacity: 0; clip-path: inset(0 100% 0 0); }
+    15%  { opacity: 1; clip-path: inset(0 60% 0 0); }
+    30%  { opacity: 1; clip-path: inset(0 0% 0 0); }
+    70%  { opacity: 1; clip-path: inset(0 0% 0 0); }
+    100% { opacity: 0; clip-path: inset(0 0% 0 0); }
+}
+
+/* --- Enemy Charge-Up Glow (flashes before firing) --- */
+.enemy-charge-glow {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    z-index: 99;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(239,68,68,0.7) 40%, transparent 70%);
+    box-shadow: 0 0 12px rgba(239,68,68,0.8), 0 0 24px rgba(239,68,68,0.4);
+    animation: chargeGlow 0.5s ease-out forwards;
+}
+.enemy-charge-glow-boss {
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(251,191,36,0.8) 35%, rgba(239,68,68,0.5) 60%, transparent 75%);
+    box-shadow: 0 0 16px rgba(251,191,36,0.9), 0 0 32px rgba(239,68,68,0.5);
+}
+@keyframes chargeGlow {
+    0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+    25%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(0.9); opacity: 0.9; }
+    75%  { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+}
+
+/* --- Laser Impact Burst (on the character that got hit) --- */
+.laser-impact-burst {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    z-index: 101;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, #fff 0%, rgba(239,68,68,0.8) 30%, rgba(239,68,68,0.3) 60%, transparent 75%);
+    box-shadow: 0 0 10px rgba(239,68,68,0.9), 0 0 20px rgba(239,68,68,0.5);
+    animation: impactBurst 0.4s ease-out forwards;
+}
+.laser-impact-burst-boss {
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle, #fff 0%, rgba(251,191,36,0.9) 25%, rgba(239,68,68,0.5) 55%, transparent 75%);
+    box-shadow: 0 0 14px rgba(251,191,36,0.9), 0 0 28px rgba(239,68,68,0.5);
+}
+@keyframes impactBurst {
+    0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+    40%  { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
+}
+
+/* --- Enemy Attack Lunge (body recoil when firing laser) --- */
+.enemy-laser-recoil #enemy-graphic-frame {
+    animation: laserRecoil 0.35s ease-out;
+}
+@keyframes laserRecoil {
+    0%   { transform: scale(1) translateX(0); }
+    20%  { transform: scale(1.08) translateX(-4px); filter: brightness(1.6); }
+    50%  { transform: scale(0.95) translateX(2px); filter: brightness(1.2); }
+    100% { transform: scale(1) translateX(0); filter: brightness(1); }
+}
+
+/* --- Old projectile compat (kept for any code referencing it) --- */
+.enemy-projectile {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    z-index: 100;
+    pointer-events: none;
+    animation: enemyProjectileFly 0.35s ease-in forwards;
+}
+.enemy-projectile-slash {
+    background: radial-gradient(circle, #ef4444 30%, transparent 70%);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(239,68,68,0.8), 0 0 16px rgba(239,68,68,0.4);
+}
+.enemy-projectile-boss {
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #fbbf24 20%, #ef4444 50%, transparent 70%);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(251,191,36,0.8), 0 0 24px rgba(239,68,68,0.5);
+}
+@keyframes enemyProjectileFly {
+    0% { transform: translate(0, 0) scale(1.2); opacity: 1; }
+    80% { transform: translate(var(--proj-x), var(--proj-y)) scale(0.8); opacity: 0.9; }
+    100% { transform: translate(var(--proj-x), var(--proj-y)) scale(0.3); opacity: 0; }
+}
+
+/* Injured character visual overlay - subtle red tint */
+.char-injured .character-vector-wrapper {
+    filter: drop-shadow(0 0 3px rgba(239,68,68,0.3)) saturate(0.85);
+}
+
+/* Saber swing enhancement for Stuart/Proton */
+.saber-swing .character-vector-wrapper {
+    animation: saberSwingAnim 0.35s ease-out !important;
+}
+@keyframes saberSwingAnim {
+    0% { transform: rotate(0deg); }
+    30% { transform: rotate(-12deg) translateX(3px); }
+    60% { transform: rotate(8deg) translateX(-2px); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Lane glow classes (already defined but not applied - now wired in) */
+.glow-front .character-vector-wrapper { filter: drop-shadow(0 5px 8px rgba(56, 189, 248, 0.35)); }
+.glow-mid .character-vector-wrapper { filter: drop-shadow(0 5px 8px rgba(167, 139, 250, 0.35)); }
+.glow-back .character-vector-wrapper { filter: drop-shadow(0 5px 8px rgba(52, 211, 153, 0.35)); }
+
+/* Enhanced enemy hurt */
+@keyframes enemyHurtCinematic {
+    0% { filter:brightness(3) saturate(0); transform:scale(1) translateX(0); }
+    25% { filter:brightness(2); transform:scale(0.95) translateX(8px); }
+    50% { filter:brightness(1.5); transform:scale(0.97) translateX(-5px); }
+    75% { filter:brightness(1.1); transform:scale(0.99) translateX(3px); }
+    100% { filter:brightness(1) saturate(1); transform:scale(1) translateX(0); }
+}
+.enemy-hurt-cinematic {
+    animation: enemyHurtCinematic 0.35s ease-out !important;
+}
+
+/* Enhanced crit popup */
+@keyframes critPopBounce {
+    0% { transform:translateY(10px) scale(0.3) rotate(-15deg); opacity:0; }
+    20% { transform:translateY(-25px) scale(1.5) rotate(5deg); opacity:1; }
+    40% { transform:translateY(-40px) scale(1.2) rotate(-3deg); }
+    100% { transform:translateY(-100px) scale(0.6) rotate(0deg); opacity:0; }
+}
+.crit-popup {
+    animation: critPopBounce 1s cubic-bezier(0.075,0.82,0.165,1) forwards !important;
+}
+
+/* Kill flash overlay */
+@keyframes killFlash {
+    0% { opacity:0; }
+    10% { opacity:0.15; }
+    30% { opacity:0; }
+    100% { opacity:0; }
+}
+.kill-flash {
+    animation: killFlash 0.4s ease-out forwards;
+}
+
+/* Enemy death explosion */
+@keyframes enemyDeathBurst {
+    0% { transform:scale(1); opacity:1; filter:brightness(1); }
+    20% { transform:scale(1.15); filter:brightness(3) saturate(0); }
+    50% { transform:scale(0.8) rotate(5deg); opacity:0.6; }
+    100% { transform:scale(0) rotate(15deg); opacity:0; }
+}
+.enemy-death-burst {
+    animation: enemyDeathBurst 0.5s ease-out forwards !important;
+}
+
+/* Wave announcement */
+@keyframes waveAnnounce {
+    0% { transform:translate(-50%,-50%) scale(0.3); opacity:0; }
+    25% { transform:translate(-50%,-50%) scale(1.1); opacity:1; }
+    75% { transform:translate(-50%,-50%) scale(1); opacity:1; }
+    100% { transform:translate(-50%,-50%) scale(0.8) translateY(-20px); opacity:0; }
+}
+
+/* Boss intro slam */
+@keyframes bossIntroSlam {
+    0% { transform:scale(3) rotate(-10deg); opacity:0; }
+    30% { transform:scale(0.95) rotate(2deg); opacity:1; }
+    50% { transform:scale(1.05) rotate(-1deg); }
+    100% { transform:scale(1) rotate(0); }
+}
+
+/* Combo counter pulse */
+@keyframes comboPulse {
+    0% { transform:scale(1); }
+    50% { transform:scale(1.15); }
+    100% { transform:scale(1); }
+}
+
+/* Ambient arena glow */
+@keyframes arenaAmbientGlow {
+    0%,100% { box-shadow:inset 0 0 40px rgba(0,0,0,0.3); }
+    50% { box-shadow:inset 0 0 60px rgba(0,0,0,0.15); }
+}
+
+#arena {
+    animation: arenaAmbientGlow 8s ease-in-out infinite;
+}
+
+/* Enhanced HP bar animations */
+.live-character-frame .h-1\.5 {
+    transition: all 0.3s ease-out;
+}
+
+/* Character attack aura flash */
+@keyframes attackAura {
+    0% { box-shadow:0 0 0 0 rgba(250,204,21,0.4); }
+    100% { box-shadow:0 0 15px 5px rgba(250,204,21,0); }
+}
+.char-attacking {
+    animation: attackAura 0.3s ease-out;
+}
+
+
+/* ============================================================
+   RESPONSIVE DESIGN — MOBILE + TABLET + DESKTOP
+   ============================================================ */
+
+/* --- TITLE / AUTH SCREEN RESPONSIVE --- */
+
+/* Landscape phones: auth screen side-by-side layout */
+@media (max-height: 500px) {
+    #title-screen {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    #logo-phase img {
+        max-height: 35vh !important;
+        max-width: 60vw !important;
+    }
+    #logo-phase p {
+        margin-top: 8px !important;
+        font-size: 8px !important;
+    }
+    #auth-phase {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        max-width: 95vw !important;
+        gap: 12px !important;
+        padding: 8px !important;
+    }
+    #auth-phase > img {
+        max-width: 100px !important;
+        display: none !important;
+    }
+    #auth-form-container {
+        padding: 10px !important;
+        font-size: 10px !important;
+    }
+    #auth-form-container input {
+        padding: 6px 8px !important;
+        font-size: 10px !important;
+        margin-bottom: 4px !important;
+    }
+    #auth-form-container button {
+        padding: 6px !important;
+        font-size: 9px !important;
+    }
+    #auth-phase .flex.items-center.gap-3 {
+        margin: 4px 0 !important;
+    }
+    #auth-phase > button:last-child {
+        padding: 8px !important;
+        font-size: 9px !important;
+    }
+    #auth-phase > button:last-child span {
+        font-size: 7px !important;
+    }
+}
+
+/* Portrait phones */
+@media (max-width: 639px) and (min-height: 501px) {
+    #logo-phase img {
+        max-height: 40vh !important;
+        max-width: 85vw !important;
+    }
+    #auth-phase {
+        max-width: 92vw !important;
+        padding: 0 12px !important;
+        gap: 10px !important;
+    }
+    #auth-phase > img {
+        max-width: 120px !important;
+    }
+    #auth-form-container {
+        padding: 12px !important;
+    }
+    #auth-form-container input {
+        padding: 10px 12px !important;
+        font-size: 12px !important;
+    }
+    #auth-form-container button {
+        padding: 10px !important;
+        font-size: 11px !important;
+    }
+    #auth-phase > button:last-child {
+        padding: 12px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* Very small screens (<400px) */
+@media (max-width: 399px) {
+    #auth-phase > img {
+        max-width: 80px !important;
+    }
+    #auth-form-container {
+        padding: 8px !important;
+    }
+    #auth-form-container input {
+        padding: 8px !important;
+        font-size: 10px !important;
+    }
+}
+
+/* --- BASE MOBILE (portrait phones, <640px) --- */
+@media (max-width: 639px) {
+    /* Top HUD bar: compact, wrapping */
+    #arena > .absolute.top-0 {
+        flex-wrap: wrap;
+        gap: 2px !important;
+        padding: 4px 6px !important;
+        font-size: 9px !important;
+    }
+    #arena > .absolute.top-0 .flex.items-center.gap-3 {
+        gap: 4px !important;
+        flex-wrap: wrap;
+        font-size: 9px !important;
+    }
+
+    /* Bottom nav: scrollable horizontal, smaller text */
+    #arena > .absolute.bottom-0 {
+        overflow-x: auto;
+        overflow-y: hidden;
+        justify-content: flex-start !important;
+        gap: 0 !important;
+        padding: 4px 4px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+    }
+    #arena > .absolute.bottom-0::-webkit-scrollbar { display: none; }
+    #arena > .absolute.bottom-0 button {
+        font-size: 8px !important;
+        padding: 4px 6px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: fit-content;
+    }
+
+    /* Character frames: smaller on mobile */
+    .live-character-frame {
+        height: 12vh !important;
+        width: 8vh !important;
+        min-width: 8vh !important;
+        max-width: 8vh !important;
+        flex-basis: 8vh !important;
+    }
+
+    /* Character stat badges: tiny */
+    .live-character-frame .flex.gap-1.justify-center {
+        display: none !important;
+    }
+    /* Character name labels: smaller */
+    .live-character-frame > span:last-of-type {
+        font-size: 6px !important;
+        padding: 2px 4px !important;
+        bottom: -4px !important;
+    }
+
+    /* Player battle line */
+    #player-battle-line {
+        left: 1% !important;
+        bottom: 16% !important;
+        gap: 0 !important;
+    }
+    #line-back, #line-mid, #line-front {
+        gap: 0 !important;
+    }
+
+    /* Robot lines */
+    #robot-line-big {
+        left: 18% !important;
+        bottom: 22% !important;
+        gap: 1px !important;
+    }
+    #robot-line-small {
+        left: 16% !important;
+        bottom: 12% !important;
+        gap: 1px !important;
+    }
+
+    /* Enemy section: smaller */
+    #enemy-container {
+        right: 2% !important;
+    }
+    #enemy-graphic-frame {
+        width: 8vh !important;
+        height: 12vh !important;
+        max-width: 80px !important;
+        max-height: 120px !important;
+    }
+    #enemy-container .w-32 {
+        width: 80px !important;
+    }
+    #fight-boss-btn {
+        font-size: 8px !important;
+        padding: 4px 8px !important;
+    }
+
+    /* Boss timer bar */
+    #boss-controls {
+        padding: 4px 8px !important;
+    }
+    #boss-controls .text-sm {
+        font-size: 10px !important;
+    }
+
+    /* Bazinga Points & Synergy Display */
+    #bazinga-points-display {
+        top: 36px !important;
+        font-size: 8px !important;
+        padding: 2px 4px !important;
+    }
+    #synergy-display {
+        top: 50px !important;
+        font-size: 7px !important;
+    }
+    #synergy-display span {
+        padding: 1px 4px !important;
+        font-size: 7px !important;
+    }
+
+    /* Kill streak display */
+    #kill-streak-display {
+        font-size: 8px !important;
+    }
+
+    /* Quick repair container */
+    #quick-repair-container {
+        font-size: 7px !important;
+    }
+
+    /* Rage badge */
+    #rage-badge {
+        font-size: 8px !important;
+        padding: 2px 6px !important;
+    }
+
+    /* All modals: full width on mobile */
+    .fixed.inset-0 > div,
+    #perks-modal > div,
+    #leaderboard-modal > div,
+    #settings-modal > div,
+    #shop-modal > div,
+    #robot-shop-modal > div,
+    #food-shop-modal > div {
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: 95vh !important;
+        margin: 4px !important;
+        border-radius: 12px !important;
+    }
+    #lineup-editor-modal > div {
+        max-width: 100% !important;
+        max-height: 96vh !important;
+    }
+
+    /* PVP modal */
+    #pvp-hub-modal > div {
+        max-width: 100% !important;
+        max-height: 96vh !important;
+    }
+
+    /* Location map modal */
+    #location-map-modal .max-w-lg {
+        max-width: 100% !important;
+    }
+}
+
+/* --- SMALL TABLETS / LANDSCAPE PHONES (640-767px) --- */
+@media (min-width: 640px) and (max-width: 767px) {
+    .live-character-frame {
+        height: 16vh !important;
+        width: 11vh !important;
+        min-width: 11vh !important;
+        max-width: 11vh !important;
+        flex-basis: 11vh !important;
+    }
+
+    #arena > .absolute.bottom-0 button {
+        font-size: 9px !important;
+        padding: 4px 8px !important;
+    }
+
+    #arena > .absolute.top-0 .flex.items-center.gap-3 {
+        font-size: 10px !important;
+    }
+
+    #enemy-graphic-frame {
+        width: 10vh !important;
+        height: 14vh !important;
+    }
+}
+
+/* --- TABLETS (768-1023px) --- */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .live-character-frame {
+        height: 18vh !important;
+        width: 12vh !important;
+        min-width: 12vh !important;
+        max-width: 12vh !important;
+        flex-basis: 12vh !important;
+    }
+}
+
+/* --- DESKTOP (1024px+) --- */
+@media (min-width: 1024px) {
+    .live-character-frame {
+        height: 22vh !important;
+        width: 15vh !important;
+        min-width: 15vh !important;
+        max-width: 15vh !important;
+        flex-basis: 15vh !important;
+    }
+}
+
+/* --- VERY SMALL SCREENS (<400px) --- */
+@media (max-width: 399px) {
+    .live-character-frame {
+        height: 10vh !important;
+        width: 7vh !important;
+        min-width: 7vh !important;
+        max-width: 7vh !important;
+        flex-basis: 7vh !important;
+    }
+
+    #enemy-graphic-frame {
+        width: 7vh !important;
+        height: 10vh !important;
+        max-width: 60px !important;
+        max-height: 90px !important;
+    }
+
+    #arena > .absolute.top-0 {
+        padding: 2px 4px !important;
+    }
+    #arena > .absolute.top-0 .flex.items-center.gap-3 {
+        font-size: 8px !important;
+        gap: 2px !important;
+    }
+    
+    #player-battle-line {
+        bottom: 18% !important;
+    }
+}
+
+/* --- LANDSCAPE MODE on mobile (short height) --- */
+@media (max-height: 500px) {
+    .live-character-frame {
+        height: 20vh !important;
+        width: 14vh !important;
+        min-width: 14vh !important;
+        max-width: 14vh !important;
+        flex-basis: 14vh !important;
+    }
+
+    #player-battle-line {
+        bottom: 10% !important;
+    }
+
+    #enemy-graphic-frame {
+        width: 10vh !important;
+        height: 16vh !important;
+    }
+
+    #arena > .absolute.bottom-0 {
+        padding: 2px 4px !important;
+    }
+    #arena > .absolute.bottom-0 button {
+        padding: 2px 6px !important;
+        font-size: 8px !important;
+    }
+}
+
+/* Touch-friendly: larger tap targets on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    #arena > .absolute.bottom-0 button {
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .live-character-frame {
+        cursor: pointer;
+    }
+    
+    /* Disable hover effects on touch */
+    .hover\:brightness-125:hover {
+        filter: none !important;
+    }
+    .hover\:scale-\[1\.02\]:hover {
+        transform: none !important;
+    }
+}
+
+/* Safe area insets for notched phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+    #arena > .absolute.bottom-0 {
+        padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+    }
+    #arena > .absolute.top-0 {
+        padding-top: calc(4px + env(safe-area-inset-top)) !important;
+    }
+}
+
+/* ==========================================================================
+   LEADERBOARD TAB BUTTONS
+   ========================================================================== */
+.lb-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    background: #1e293b;
+    color: #64748b;
+}
+
+.lb-tab-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+    border-radius: inherit;
+}
+
+.lb-tab-btn:hover {
+    transform: translateY(-1px);
+}
+
+.lb-tab-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Inactive */
+.lb-tab-inactive {
+    background: #1e293b;
+    color: #64748b;
+    border-color: #334155;
+}
+.lb-tab-inactive:hover {
+    background: #334155;
+    color: #94a3b8;
+    border-color: #475569;
+}
+
+/* Active: Score (gold) */
+.lb-tab-active-score {
+    background: linear-gradient(135deg, #b45309, #d97706);
+    color: #fff;
+    border-color: #f59e0b;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Active: Trophy (purple) */
+.lb-tab-active-trophy {
+    background: linear-gradient(135deg, #7e22ce, #9333ea);
+    color: #fff;
+    border-color: #a855f7;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Active: Wave (blue) */
+.lb-tab-active-wave {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    color: #fff;
+    border-color: #60a5fa;
+    box-shadow: 0 0 14px rgba(96, 165, 250, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* ==========================================================================
+   LANDSCAPE MOBILE RESPONSIVE MODALS
+   Game is played in landscape - modals must fit short viewports
+   ========================================================================== */
+
+/* Landscape phones: viewport height is very short (typically 300-500px) */
+@media (max-height: 500px) and (orientation: landscape) {
+    /* All modal overlays: reduce padding */
+    #perks-modal, #leaderboard-modal, #shop-modal, #robots-modal,
+    #food-shop-modal, #location-map-modal, #action-modal, #robot-action-modal,
+    #lineup-editor-modal, #settings-modal, #player-profile-modal {
+        padding: 4px !important;
+    }
+
+    /* All modal inner containers: fit to screen */
+    #perks-modal > div, #leaderboard-modal > div, #shop-modal > div,
+    #robots-modal > div, #food-shop-modal > div, #location-map-modal > div,
+    #settings-modal > div {
+        max-height: 96vh !important;
+        max-width: 95vw !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+    }
+
+    /* Modal headers: compact */
+    #perks-modal h2, #leaderboard-modal h2, #shop-modal h2,
+    #robots-modal h2, #food-shop-modal h2, #location-map-modal h2,
+    #settings-modal h2 {
+        font-size: 11px !important;
+        margin-bottom: 2px !important;
+    }
+
+    #perks-modal .border-b-4, #leaderboard-modal .border-b-4,
+    #shop-modal .border-b-4, #robots-modal .border-b-4,
+    #food-shop-modal .border-b-4, #location-map-modal .border-b-4 {
+        padding-bottom: 4px !important;
+        margin-bottom: 6px !important;
+        border-bottom-width: 2px !important;
+    }
+
+    /* Header subtitles: hide in landscape to save space */
+    #perks-modal p[class*="text-gray-400"],
+    #leaderboard-modal p[class*="text-gray-400"],
+    #shop-modal p[class*="text-gray-500"],
+    #robots-modal p[class*="text-gray-500"],
+    #food-shop-modal p[class*="text-gray-500"],
+    #location-map-modal p[class*="text-gray-500"] {
+        display: none !important;
+    }
+
+    /* Scrollable content areas: allow scroll but cap height */
+    #skill-tree-container, #leaderboard-list, #roster-grid,
+    #robots-grid, #food-grid, #location-grid {
+        max-height: 55vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Grids: use 2-column layout in landscape for better use of width */
+    #roster-grid, #robots-grid, #food-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 4px !important;
+    }
+
+    #location-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 4px !important;
+    }
+
+    /* The Gang (shop-modal) character cards: compact */
+    #roster-grid > div, #robots-grid > div, #food-grid > div {
+        padding: 6px !important;
+    }
+
+    /* Character Action Modal: compact for landscape */
+    #action-modal > div, #robot-action-modal > div {
+        max-height: 96vh !important;
+        max-width: 380px !important;
+        padding: 8px 12px !important;
+        overflow-y: auto !important;
+    }
+
+    #action-modal h3, #robot-action-modal h3 {
+        font-size: 12px !important;
+    }
+
+    #action-modal p, #robot-action-modal p {
+        font-size: 8px !important;
+        margin-bottom: 4px !important;
+        min-height: unset !important;
+    }
+
+    /* Stats grid in action modal */
+    #action-modal .grid, #robot-action-modal .grid {
+        gap: 2px !important;
+    }
+
+    /* Action modal cost + buttons: tighter */
+    #modal-footer-actions, #robot-modal-footer-actions {
+        margin-top: 4px !important;
+    }
+
+    /* Workshop: Crafting queue compact */
+    #robots-modal .crafting-queue-container {
+        max-height: 60px !important;
+    }
+
+    /* Lineup Editor: fit landscape */
+    #lineup-editor-modal > div {
+        max-height: 96vh !important;
+        max-width: 90vw !important;
+    }
+
+    /* Leaderboard entries: compact */
+    #leaderboard-list > div {
+        padding: 6px 8px !important;
+    }
+
+    /* Skill tree (Whiteboard): compact nodes */
+    #skill-tree-container > div {
+        padding: 6px !important;
+    }
+
+    /* Close buttons: smaller hit area */
+    #perks-modal button[class*="text-2xl"],
+    #leaderboard-modal button[class*="text-2xl"],
+    #shop-modal button[class*="text-2xl"],
+    #robots-modal button[class*="text-2xl"],
+    #food-shop-modal button[class*="text-2xl"],
+    #location-map-modal button[class*="text-2xl"] {
+        font-size: 16px !important;
+        top: 2px !important;
+        right: 6px !important;
+    }
+
+    /* Food shop money display: inline */
+    #food-modal-money {
+        padding: 2px 8px !important;
+        font-size: 10px !important;
+    }
+
+    /* Settings modal: compact */
+    #settings-modal > div {
+        padding: 10px !important;
+    }
+
+    /* Pasadena map: 2-col for locations */
+    #location-map-modal .grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Even shorter screens (phones with nav bars eating space) */
+@media (max-height: 380px) and (orientation: landscape) {
+    #perks-modal > div, #leaderboard-modal > div, #shop-modal > div,
+    #robots-modal > div, #food-shop-modal > div, #location-map-modal > div,
+    #settings-modal > div {
+        padding: 6px 8px !important;
+    }
+
+    #skill-tree-container, #leaderboard-list, #roster-grid,
+    #robots-grid, #food-grid, #location-grid {
+        max-height: 50vh !important;
+    }
+
+    #roster-grid, #robots-grid, #food-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 3px !important;
+    }
+
+    /* Action modal: even more compact */
+    #action-modal > div, #robot-action-modal > div {
+        padding: 6px 8px !important;
+    }
+
+    #action-modal .bg-slate-950, #robot-action-modal .bg-slate-950 {
+        padding: 4px !important;
+        margin-bottom: 2px !important;
+    }
+}
+
+/* Portrait tablet / large phone */
+@media (max-width: 768px) and (orientation: portrait) {
+    #shop-modal > div, #robots-modal > div, #food-shop-modal > div {
+        max-height: 90vh !important;
+        max-width: 95vw !important;
+    }
+
+    #roster-grid, #robots-grid, #food-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ================================================================
+   ENEMY LASER BEAM ATTACK SYSTEM
+   ================================================================ */
+
+/* --- 1. Charge-Up Glow (orb at enemy before firing) --- */
+.enemy-charge-glow {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    margin-top: -9px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff4444 0%, #ff0000 40%, rgba(255,0,0,0) 70%);
+    box-shadow:
+        0 0 8px 3px rgba(255,50,50,0.8),
+        0 0 20px 6px rgba(255,0,0,0.4),
+        0 0 40px 10px rgba(200,0,0,0.2);
+    z-index: 110;
+    pointer-events: none;
+    animation: chargeGlowPulse 0.5s ease-out forwards;
+}
+.enemy-charge-glow-boss {
+    width: 30px;
+    height: 30px;
+    margin-left: -15px;
+    margin-top: -15px;
+    background: radial-gradient(circle, #ffaa00 0%, #ff4400 35%, #ff0000 60%, rgba(255,0,0,0) 80%);
+    box-shadow:
+        0 0 12px 5px rgba(255,170,0,0.9),
+        0 0 30px 10px rgba(255,68,0,0.5),
+        0 0 50px 15px rgba(255,0,0,0.25);
+}
+@keyframes chargeGlowPulse {
+    0% { transform: scale(0.2); opacity: 0; }
+    30% { transform: scale(1.4); opacity: 1; }
+    60% { transform: scale(1.0); opacity: 0.9; }
+    80% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(0.3); opacity: 0; }
+}
+
+/* --- 2. Laser Beam (rotated line from enemy to target) --- */
+.enemy-laser-beam {
+    position: absolute;
+    height: 3px;
+    transform-origin: 0% 50%;
+    z-index: 105;
+    pointer-events: none;
+    background: linear-gradient(90deg,
+        rgba(255,80,80,0.0) 0%,
+        rgba(255,50,50,1) 5%,
+        rgba(255,100,100,1) 15%,
+        rgba(255,200,200,1) 50%,
+        rgba(255,100,100,1) 85%,
+        rgba(255,50,50,1) 95%,
+        rgba(255,80,80,0.0) 100%
+    );
+    box-shadow:
+        0 0 4px 1px rgba(255,50,50,0.8),
+        0 0 10px 3px rgba(255,0,0,0.4),
+        0 0 20px 5px rgba(200,0,0,0.15);
+    border-radius: 2px;
+    animation: laserBeamFire 0.45s ease-out forwards;
+}
+.enemy-laser-beam::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 7px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,150,150,0.3) 20%,
+        rgba(255,200,200,0.5) 50%,
+        rgba(255,150,150,0.3) 80%,
+        transparent 100%
+    );
+    border-radius: 4px;
+    filter: blur(2px);
+}
+.enemy-laser-beam-boss {
+    height: 6px;
+    background: linear-gradient(90deg,
+        rgba(255,170,0,0.0) 0%,
+        rgba(255,100,0,1) 5%,
+        rgba(255,200,50,1) 15%,
+        rgba(255,255,200,1) 50%,
+        rgba(255,200,50,1) 85%,
+        rgba(255,100,0,1) 95%,
+        rgba(255,170,0,0.0) 100%
+    );
+    box-shadow:
+        0 0 6px 2px rgba(255,170,0,0.9),
+        0 0 15px 5px rgba(255,100,0,0.5),
+        0 0 30px 8px rgba(255,50,0,0.2);
+}
+.enemy-laser-beam-boss::before {
+    top: -4px;
+    height: 14px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,200,100,0.4) 20%,
+        rgba(255,240,180,0.6) 50%,
+        rgba(255,200,100,0.4) 80%,
+        transparent 100%
+    );
+    filter: blur(3px);
+}
+@keyframes laserBeamFire {
+    0% {
+        clip-path: inset(0 100% 0 0);
+        opacity: 0;
+    }
+    15% {
+        clip-path: inset(0 80% 0 0);
+        opacity: 1;
+    }
+    40% {
+        clip-path: inset(0 0% 0 0);
+        opacity: 1;
+    }
+    70% {
+        clip-path: inset(0 0% 0 0);
+        opacity: 0.8;
+    }
+    100% {
+        clip-path: inset(0 0% 0 0);
+        opacity: 0;
+    }
+}
+
+/* --- 3. Impact Burst (explosion at target character) --- */
+.laser-impact-burst {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
+    border-radius: 50%;
+    z-index: 112;
+    pointer-events: none;
+    background: radial-gradient(circle, #ffffff 0%, #ff6666 30%, #ff0000 60%, transparent 75%);
+    box-shadow:
+        0 0 8px 3px rgba(255,100,100,0.9),
+        0 0 18px 6px rgba(255,50,50,0.5),
+        0 0 35px 10px rgba(255,0,0,0.2);
+    animation: laserImpactBurst 0.4s ease-out forwards;
+}
+.laser-impact-burst::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,100,100,0.6);
+    animation: impactRingExpand 0.4s ease-out forwards;
+}
+.laser-impact-burst-boss {
+    width: 36px;
+    height: 36px;
+    margin-left: -18px;
+    margin-top: -18px;
+    background: radial-gradient(circle, #ffffff 0%, #ffcc44 25%, #ff6600 50%, #ff0000 70%, transparent 85%);
+    box-shadow:
+        0 0 12px 5px rgba(255,200,50,0.9),
+        0 0 25px 8px rgba(255,100,0,0.5),
+        0 0 45px 15px rgba(255,50,0,0.25);
+}
+@keyframes laserImpactBurst {
+    0% { transform: scale(0.3); opacity: 0; }
+    20% { transform: scale(1.3); opacity: 1; }
+    50% { transform: scale(1.0); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes impactRingExpand {
+    0% { transform: scale(0.5); opacity: 0; }
+    30% { transform: scale(1.0); opacity: 0.8; }
+    100% { transform: scale(2.0); opacity: 0; }
+}
+
+/* --- 4. Enemy Body Recoil (shake when firing) --- */
+.enemy-laser-recoil {
+    animation: enemyLaserRecoil 0.35s ease-out !important;
+}
+@keyframes enemyLaserRecoil {
+    0% { transform: translateX(0); }
+    15% { transform: translateX(6px) scale(1.03); }
+    35% { transform: translateX(-4px) scale(0.98); }
+    55% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+    100% { transform: translateX(0) scale(1); }
+}
