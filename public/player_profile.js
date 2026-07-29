@@ -27,12 +27,20 @@
         if (typeof state === 'undefined') return;
         if (!state.profile) {
             state.profile = {
-                name: 'Player',
+                name: '',
                 avatar: 'sheldon',
                 bio: '',
                 flag: '🇺🇸',
                 nameChanged: false
             };
+        }
+        
+        // Sync username from database session if local state still has default
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.username) {
+            if (!state.profile.name || state.profile.name === 'Player') {
+                state.profile.name = currentUser.username;
+                state.profile.nameChanged = true;
+            }
         }
     }
 
