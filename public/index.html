@@ -14,6 +14,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>The Big Bang Theory: Idle Bazinga</title>
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg">
     <meta name="description" content="An idle RPG game featuring characters from The Big Bang Theory!">
     <!-- PWA manifest (only on http/https to avoid CORS on file://) -->
     <script>if(window.location.protocol!=='file:'){var ml=document.createElement('link');ml.rel='manifest';ml.href='manifest.json';document.head.appendChild(ml);}</script>
@@ -97,6 +98,24 @@
         /* Hide side rail + map button during hangout mode */
         .hangout-active #side-rail,
         .hangout-active #map-float-btn { display: none !important; }
+        /* Desktop Enhancements */
+        @media (min-width: 1024px) {
+            .bottom-tab .text-lg { font-size: 20px; }
+            .bottom-tab-label { font-size: 11px; }
+            .bottom-tab { gap: 4px; padding: 10px 6px; flex: unset; min-width: 90px; }
+            #bottom-nav { justify-content: center !important; gap: 15px; }
+
+            .side-rail-btn { width: 45px; height: 45px; margin-bottom: 8px; }
+            .side-rail-btn .text-sm { font-size: 24px; }
+            #side-rail { padding: 10px; opacity: 0.8 !important; }
+
+            /* Target top buttons dynamically */
+            .top-btn, button[onclick*="toggleAuto"], button[onclick*="startSweep"], button[onclick*="openBazinga"] {
+                transform: scale(1.15);
+                transform-origin: center right;
+                margin-left: 8px;
+            }
+        }
     </style>
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

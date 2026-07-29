@@ -3761,7 +3761,8 @@ function renderActiveBattleLine() {
     ['back', 'mid', 'front'].forEach(laneKey => {
         const container = document.getElementById(`line-${laneKey}`);
         if (!container) return;
-        container.innerHTML = '';
+        
+        let htmlContent = '';
 
         lanes[laneKey].forEach((char, index) => {
             const { key, config } = char;
@@ -3795,7 +3796,7 @@ function renderActiveBattleLine() {
                 else hangoutStyle = 'position: absolute; bottom: ' + (Math.random()*40) + '%; left: ' + (Math.random()*60) + '%; transform: scale(1.5);';
             }
 
-            container.innerHTML += `
+            htmlContent += `
                 <div id="live-character-${key}" 
                      onclick="openModal(event, '${key}')"
                      style="z-index: ${20 + index}; animation-delay: ${index * 0.15}s; ${hangoutStyle}" class="live-character-frame relative flex flex-col items-center justify-end cursor-pointer hover:brightness-125 transition pointer-events-auto glow-${laneKey} ${hpPct <= 25 ? 'char-low-hp' : ''} ${hpPct < 50 && hpPct > 0 ? 'char-injured' : ''}">
@@ -3822,6 +3823,7 @@ function renderActiveBattleLine() {
                 </div>
             `;
         });
+        container.innerHTML = htmlContent;
     });
 
     updateSheldonBuffBadge();
@@ -4652,6 +4654,11 @@ function renderRobotBattleLine() {
 
     // Render bots into their dedicated containers, spread by index
     var botIndex = 0;
+    
+    // Accumulators for batched DOM updates
+    let bigContainerHtml = '';
+    let smallContainerHtml = '';
+
     (state.formation.bots || []).forEach(slot => {
         if (!slot) return;
         const robot = state.robots.find(r => r && r.blueprintId === slot.key && r.equipped);
@@ -4661,14 +4668,10 @@ function renderRobotBattleLine() {
         
         const lore = botLore[robot.blueprintId] || { scale: 1, z: 10, flying: false };
         const isSmall = lore.scale <= 1.5;
-        const container = isSmall ? smallContainer : bigContainer;
-        if (!container) return;
         
         const dps = Math.round((config.baseDmg * robot.level * 1000) / config.atkSpeed);
         var svgRaw = getVectorFrame(robot.blueprintId, false);
-        // Safety: ensure svg is always a string, never [object Object]
         const svg = (typeof svgRaw === 'string' && svgRaw.length > 0) ? svgRaw : '🤖';
-        // Safety: ensure robot name is a string
         const robotDisplayName = (typeof robot.name === 'string') ? robot.name : (config.name || robot.blueprintId);
         const floatClass = lore.flying ? 'mb-[15%] animate-pulse' : '';
         
@@ -4682,7 +4685,7 @@ function renderRobotBattleLine() {
         `;
         const smokeHtml = robot.overheated ? '<div class="robot-overheat-smoke absolute -top-10 left-1/2 -translate-x-1/2 animate-bounce text-2xl z-50 pointer-events-none">💨</div><div class="robot-overheat-smoke absolute -top-6 text-red-500 font-bold text-[8px] bg-black/80 px-1 rounded z-50">OVERHEATED</div>' : '';
         
-        container.innerHTML += `
+        const botHtml = `
             <div id="live-robot-${robot.id}" 
                  class="live-character-frame relative flex flex-col items-center justify-end cursor-pointer hover:scale-[1.02] transition-transform pointer-events-auto ${floatClass}" 
                  style="z-index: ${lore.z};"
@@ -4697,8 +4700,17 @@ function renderRobotBattleLine() {
                 <span class="bg-cyan-950/90 text-white border border-cyan-700 font-bold text-[9px] px-2 py-1 absolute -bottom-6 rounded whitespace-nowrap uppercase tracking-tighter shadow-lg">${robotDisplayName}</span>
             </div>
         `;
+        
+        if (isSmall) {
+            smallContainerHtml += botHtml;
+        } else {
+            bigContainerHtml += botHtml;
+        }
         botIndex++;
     });
+    
+    if (smallContainer) smallContainer.innerHTML = smallContainerHtml;
+    if (bigContainer) bigContainer.innerHTML = bigContainerHtml;
 }
 
 
