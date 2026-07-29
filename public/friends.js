@@ -84,24 +84,38 @@
         document.head.appendChild(style);
     })();
 
-    // ---- RANDOM NAME PICKER ----
-    function pickRandomGamerName() {
-        // Avoid names already in friends or pending requests
+    // ---- RANDOM PLAYER PICKER ----
+    function pickRandomPlayerProfile() {
         var usedNames = {};
         var i;
         for (i = 0; i < state.friends.length; i++) usedNames[state.friends[i].name.toLowerCase()] = true;
         for (i = 0; i < state.friendRequests.sent.length; i++) usedNames[state.friendRequests.sent[i].name.toLowerCase()] = true;
         for (i = 0; i < state.friendRequests.received.length; i++) usedNames[state.friendRequests.received[i].name.toLowerCase()] = true;
+        if (currentUser && currentUser.username) usedNames[currentUser.username.toLowerCase()] = true;
 
+        // Try to pick from real global player pool
+        if (window.playerPool && window.playerPool.length > 0) {
+            var validPlayers = [];
+            for (i = 0; i < window.playerPool.length; i++) {
+                var p = window.playerPool[i];
+                if (p.username && !usedNames[p.username.toLowerCase()]) {
+                    validPlayers.push({ name: p.username, trophies: p.trophies || 0, wave: p.wave || 1 });
+                }
+            }
+            if (validPlayers.length > 0) {
+                return validPlayers[Math.floor(Math.random() * validPlayers.length)];
+            }
+        }
+
+        // Fallback to fake names
         var available = [];
         for (i = 0; i < RANDOM_GAMER_NAMES.length; i++) {
             if (!usedNames[RANDOM_GAMER_NAMES[i].toLowerCase()]) available.push(RANDOM_GAMER_NAMES[i]);
         }
         if (available.length === 0) {
-            // Fallback: generate unique name
-            return 'Player_' + Math.floor(Math.random() * 99999);
+            return { name: 'Player_' + Math.floor(Math.random() * 99999), trophies: Math.floor(Math.random() * 500), wave: Math.floor(Math.random() * 30) + 1 };
         }
-        return available[Math.floor(Math.random() * available.length)];
+        return { name: available[Math.floor(Math.random() * available.length)], trophies: Math.floor(Math.random() * 800) + 50, wave: Math.floor(Math.random() * 40) + 1 };
     }
 
     // ---- DAILY GIFT HELPERS ----
@@ -242,17 +256,17 @@
         initFriends();
         if (state.friends.length >= MAX_FRIENDS) return;
 
-        var name = pickRandomGamerName();
+        var profile = pickRandomPlayerProfile();
         var entry = {
             id: 'inc_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-            name: name,
+            name: profile.name,
             receivedAt: Date.now(),
-            trophies: Math.floor(Math.random() * 800) + 50,
-            wave: Math.floor(Math.random() * 40) + 1
+            trophies: profile.trophies,
+            wave: profile.wave
         };
 
         state.friendRequests.received.push(entry);
-        showToast('📩 <span style="color:#60a5fa">' + escFriend(name) + '</span> sent you a friend request!');
+        showToast('📩 <span style="color:#60a5fa">' + escFriend(profile.name) + '</span> sent you a friend request!');
         if (typeof saveProgress === 'function') saveProgress();
         refreshModalIfOpen();
     }

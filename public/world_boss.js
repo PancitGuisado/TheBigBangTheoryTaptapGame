@@ -17,7 +17,7 @@
         { key: 'kripke_revenge', name: "Kripke's Revenge", emoji: '🧪', color: '#22c55e', maxHp: 10000000 }
     ];
 
-    var SIM_NAMES = [
+    var FALLBACK_BOSS_SIM_NAMES = [
         'BazingaMaster', 'PennyBlossomFan', 'RocketManH', 'RajKoothrappali99',
         'SheldonBot3000', 'WolowitzAstro', 'AmyNeuro', 'StuartComics',
         'LeslieQuantum', 'ProtonJr', 'StringTheoryNerd', 'ComicBookGal',
@@ -70,7 +70,13 @@
     function generateSimLeaderboard(playerDmg) {
         var entries = [];
         var simCount = 12 + Math.floor(Math.random() * 6); // 12-17 simulated
-        var shuffled = shuffleArray(SIM_NAMES).slice(0, simCount);
+        var sourcePool = (window.playerPool && window.playerPool.length >= simCount) 
+            ? window.playerPool.map(function(p) { return p.username; }).filter(Boolean)
+            : FALLBACK_BOSS_SIM_NAMES;
+        
+        if (sourcePool.length < simCount) sourcePool = FALLBACK_BOSS_SIM_NAMES;
+            
+        var shuffled = shuffleArray(sourcePool).slice(0, simCount);
         var baseDmg = Math.max(playerDmg, 50000);
         for (var i = 0; i < shuffled.length; i++) {
             var mult = 0.2 + Math.random() * 1.8; // 20%-200%

@@ -6,7 +6,7 @@
 
     var ENTRY_FEE = 500;
     var TOURNAMENT_COOLDOWN_MS = 7 * 24 * 3600 * 1000; // 7 days
-    var SIMULATED_NAMES = [
+    var FALLBACK_TOURNAMENT_NAMES = [
         'Dr. Crawfish', 'xXScienceXx', 'QuantumKing', 'NerdHerd42', 'BazingaMaster',
         'RocketMan99', 'StringTheory', 'CosmicCat', 'PhysicsPhD', 'MolecularMike',
         'AstroNova', 'ProtonPal', 'TheWiz4rd', 'BigBrainBob', 'LaserLady',
@@ -40,8 +40,16 @@
     function generateOpponent(round) {
         var powerBase = getTeamPower();
         var variance = 0.6 + Math.random() * 0.8 + round * 0.15;
+        var name;
+        if (window.playerPool && window.playerPool.length > 0 && Math.random() < 0.8) {
+            var pData = window.playerPool[Math.floor(Math.random() * window.playerPool.length)];
+            name = pData.username || FALLBACK_TOURNAMENT_NAMES[Math.floor(Math.random() * FALLBACK_TOURNAMENT_NAMES.length)];
+        } else {
+            name = FALLBACK_TOURNAMENT_NAMES[Math.floor(Math.random() * FALLBACK_TOURNAMENT_NAMES.length)];
+        }
+
         return {
-            name: SIMULATED_NAMES[Math.floor(Math.random() * SIMULATED_NAMES.length)],
+            name: name,
             power: Math.floor(powerBase * variance),
             avatar: ['🧑‍🔬','👨‍💻','👩‍🚀','🧙‍♂️','🤖','👾','🦸','🧝'][Math.floor(Math.random()*8)]
         };

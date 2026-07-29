@@ -248,20 +248,20 @@
         <div id="arena-background" class="absolute inset-0 z-0 pointer-events-none"></div>
 
         <!-- TOP BAR: Compact HUD -->
-        <div class="absolute top-0 left-0 right-0 z-50 flex items-center gap-1 px-2 py-1 bg-black/80 backdrop-blur-md border-b border-white/5 pointer-events-auto" style="min-height:24px;">
-            <div class="flex items-center gap-1 text-[8px] flex-1 min-w-0">
+        <div class="absolute top-0 left-0 right-0 z-50 flex items-center gap-2 px-3 py-2 bg-black/80 backdrop-blur-md border-b border-white/5 pointer-events-auto" style="min-height:36px;">
+            <div class="flex items-center gap-2 text-xs sm:text-sm flex-1 min-w-0">
                 <span class="text-green-400 font-bold whitespace-nowrap" id="res-money">$0</span>
                 <span class="text-gray-700">·</span>
-                <span class="text-gray-400 whitespace-nowrap">EP:<span id="ui-wave-val" class="text-white font-bold">1</span></span>
+                <span class="text-gray-400 whitespace-nowrap">EP:<span id="ui-wave-val" class="text-white font-bold ml-1">1</span></span>
                 <span class="text-gray-700">·</span>
-                <span class="text-gray-400 whitespace-nowrap">IQ:<span id="score-val" class="text-yellow-400 font-bold">0</span></span>
+                <span class="text-gray-400 whitespace-nowrap">IQ:<span id="score-val" class="text-yellow-400 font-bold ml-1">0</span></span>
                 <!-- Collapsible resource pill -->
-                <span id="res-pill" onclick="toggleResourcePill(event)" class="whitespace-nowrap cursor-pointer rounded-full px-1.5 py-px transition-all hover:bg-white/10" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:7px;color:#9ca3af;" title="Tap to show resources">📦 <span id="res-pill-count">0</span> ▾</span>
+                <span id="res-pill" onclick="toggleResourcePill(event)" class="whitespace-nowrap cursor-pointer rounded-full px-2 py-0.5 transition-all hover:bg-white/10" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;color:#9ca3af;" title="Tap to show resources">📦 <span id="res-pill-count">0</span> ▾</span>
             </div>
-            <div class="flex items-center gap-0 flex-shrink-0">
+            <div class="flex items-center gap-1 flex-shrink-0">
                 <!-- Combat controls get injected here by JS -->
-                <button onclick="openLeaderboard(event)" class="text-yellow-400 font-bold px-1 py-0.5 cursor-pointer text-[9px] hover:text-yellow-300 transition-colors" title="Leaderboard">🏆</button>
-                <button onclick="openSettingsModal(event)" class="text-white font-bold px-1 py-0.5 cursor-pointer text-[9px] hover:text-pink-400 transition-colors">⚙️</button>
+                <button onclick="openLeaderboard(event)" class="text-yellow-400 font-bold px-2 py-1 cursor-pointer text-sm hover:text-yellow-300 transition-colors" title="Leaderboard">🏆</button>
+                <button onclick="openSettingsModal(event)" class="text-white font-bold px-2 py-1 cursor-pointer text-sm hover:text-pink-400 transition-colors">⚙️</button>
             </div>
         </div>
         <!-- Resource Dropdown (hidden by default) -->

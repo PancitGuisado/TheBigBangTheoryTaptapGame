@@ -12,7 +12,7 @@ var PVP_LEAGUES = [
     { name: 'Legend', icon: '🌟', minTrophies: 2000, color: '#f59e0b' }
 ];
 
-var PVP_OPPONENT_NAMES = [
+var FALLBACK_PVP_NAMES = [
     'Dr. Cooper Fan', 'Bazinga Boy', 'Penny4President', 'RocketManHoward',
     'RajTheStar', 'AmyFarrahFowl', 'BernieTheBlonde', 'StuartSadBoi',
     'SheldonJr', 'WolowitzRocket', 'CooperSmash', 'NerdHerd42',
@@ -491,7 +491,17 @@ function generateFallbackOpponents() {
 
     for (var i = 0; i < 3; i++) {
         var name;
-        do { name = PVP_OPPONENT_NAMES[Math.floor(Math.random() * PVP_OPPONENT_NAMES.length)]; } while (usedNames.indexOf(name) !== -1);
+        var pData = null;
+        var attempts = 0;
+        do { 
+            if (window.playerPool && window.playerPool.length > 0 && Math.random() < 0.8) {
+                pData = window.playerPool[Math.floor(Math.random() * window.playerPool.length)];
+                name = pData.username || FALLBACK_PVP_NAMES[Math.floor(Math.random() * FALLBACK_PVP_NAMES.length)];
+            } else {
+                name = FALLBACK_PVP_NAMES[Math.floor(Math.random() * FALLBACK_PVP_NAMES.length)];
+            }
+            attempts++;
+        } while (usedNames.indexOf(name) !== -1 && attempts < 20);
         usedNames.push(name);
 
         var charKeys = Object.keys(characters);

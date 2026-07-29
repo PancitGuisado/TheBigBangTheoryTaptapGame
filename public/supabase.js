@@ -242,3 +242,21 @@ async function fetchLeaderboard(limit, orderBy, seasonId) {
     
     return lbResult.error ? [] : (lbResult.data || []);
 }
+
+// ============================================================
+// GLOBAL PLAYER POOL
+// ============================================================
+window.playerPool = [];
+
+async function loadPlayerPool() {
+    if (!supabase) return;
+    try {
+        var res = await supabase.from('leaderboard').select('*').limit(150);
+        if (res && res.data && res.data.length > 0) {
+            window.playerPool = res.data;
+            console.log('[CLOUD] Loaded player pool: ' + window.playerPool.length + ' players');
+        }
+    } catch (e) {
+        console.warn('[CLOUD] Failed to load player pool:', e.message);
+    }
+}

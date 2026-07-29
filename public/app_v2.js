@@ -735,6 +735,7 @@ function initGame() {
             if (session) {
                 updateOnlineStatus();
                 if (typeof initGuildSystem === 'function') initGuildSystem();
+                if (typeof loadPlayerPool === 'function') loadPlayerPool();
                 
                 // CRITICAL FIX: Prevent data loss on new devices or cleared cache
                 try {
@@ -7010,8 +7011,8 @@ function ensureCombatStrip() {
     if (!strip) {
         strip = document.createElement('div');
         strip.id = 'combat-controls-strip';
-        strip.className = 'flex items-center gap-1 justify-end';
-        strip.style.cssText = 'position:absolute;top:26px;right:4px;z-index:49;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:2px 4px;pointer-events:auto;';
+        strip.className = 'flex items-center gap-2 justify-end flex-wrap';
+        strip.style.cssText = 'position:absolute;top:40px;right:4px;z-index:49;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:4px 6px;pointer-events:auto;';
         var arena = document.getElementById('arena');
         if (arena) {
             arena.parentElement.appendChild(strip);
@@ -7027,12 +7028,12 @@ function renderAutoBossToggle() {
         if (!strip) return;
         btn = document.createElement('button');
         btn.id = 'auto-boss-toggle';
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all';
         btn.onclick = toggleAutoBoss;
         strip.appendChild(btn);
     }
     const active = state.autoBoss;
-    btn.className = `text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all ${active ? 'bg-emerald-600/80 text-white' : 'bg-slate-800/80 text-gray-500'}`;
+    btn.className = `text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all ${active ? 'bg-emerald-600/80 text-white' : 'bg-slate-800/80 text-gray-500'}`;
     btn.textContent = active ? '🤖 AUTO' : '🤖 OFF';
 }
 
@@ -7058,7 +7059,7 @@ function renderSpeedToggle() {
     }
     const speed = state.battleSpeed || 1;
     const colors = { 1: 'bg-slate-800/80 text-gray-400', 2: 'bg-blue-600/80 text-white', 3: 'bg-purple-600/80 text-white' };
-    btn.className = `text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all ${colors[speed] || colors[1]}`;
+    btn.className = `text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all ${colors[speed] || colors[1]}`;
     btn.textContent = `⚡ ${speed}x`;
 }
 
@@ -7094,10 +7095,10 @@ function renderMuteToggle() {
     }
     const muted = state.muted || false;
     if (muted) {
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all bg-red-900/80 text-white';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all bg-red-900/80 text-white';
         btn.textContent = '🔇';
     } else {
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all bg-slate-800/80 text-gray-400';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all bg-slate-800/80 text-gray-400';
         btn.textContent = '🔊';
     }
 }
@@ -7172,15 +7173,15 @@ function renderCombatLogToggle() {
         // Create log panel
         var panel = document.createElement('div');
         panel.id = 'combat-log-panel';
-        panel.style.cssText = 'position:absolute;top:32px;right:8px;z-index:200;width:180px;max-height:140px;background:rgba(0,0,0,0.9);backdrop-filter:blur(8px);border:1px solid rgba(100,116,139,0.3);border-radius:8px;overflow-y:auto;scrollbar-width:thin;display:none;';
+        panel.style.cssText = 'position:absolute;top:44px;right:8px;z-index:200;width:200px;max-height:160px;background:rgba(0,0,0,0.9);backdrop-filter:blur(8px);border:1px solid rgba(100,116,139,0.3);border-radius:8px;overflow-y:auto;scrollbar-width:thin;display:none;';
         var arenaEl = document.getElementById('arena');
         if (arenaEl) arenaEl.parentElement.appendChild(panel);
     }
     if (combatLogVisible) {
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all bg-slate-800/80 text-green-400';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all bg-slate-800/80 text-green-400';
         btn.textContent = '\u{1F4CB}';
     } else {
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all bg-slate-800/80 text-gray-400';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all bg-slate-800/80 text-gray-400';
         btn.textContent = '\u{1F4CB}';
     }
 }
@@ -7196,7 +7197,7 @@ function renderQuickHealButton() {
         btn = document.createElement('button');
         btn.id = 'quick-heal-btn';
         btn.onclick = doQuickHeal;
-        btn.className = 'text-[8px] font-bold px-1 py-0.5 rounded cursor-pointer transition-all bg-emerald-900/80 text-emerald-300';
+        btn.className = 'text-[10px] sm:text-xs font-bold px-2 py-1 rounded cursor-pointer transition-all bg-emerald-900/80 text-emerald-300';
         btn.style.cssText = 'display:none;white-space:nowrap;';
         btn.textContent = '\u{1F354}';
         var strip = ensureCombatStrip();

@@ -187,7 +187,7 @@
 
         var btn = document.createElement('button');
         btn.id = 'sweep-btn';
-        btn.className = 'text-white font-black px-2 py-0.5 rounded-lg text-[8px] uppercase tracking-wider cursor-pointer transition-all';
+        btn.className = 'text-white font-black px-3 py-1 rounded-lg text-[10px] sm:text-xs uppercase tracking-wider cursor-pointer transition-all';
         btn.textContent = '⚡ SWEEP';
         btn.title = 'Instantly clear previously beaten waves for loot';
         btn.onclick = function(e) { e.stopPropagation(); executeSweep(); };
